@@ -1,0 +1,16 @@
+[submodule ".references/go-humanize"]
+	path = .references/go-humanize
+	url = https://github.com/dustin/go-humanize
+	shallow = true
+[submodule ".references/php-humanizer"]
+	path = .references/php-humanizer
+	url = https://github.com/coduo/php-humanizer
+	shallow = true
+[submodule ".references/humanize"]
+	path = .references/humanize
+	url = https://github.com/python-humanize/humanize
+	shallow = true
+[submodule ".agents/skills"]
+	path = .agents/skills
+	url = https://github.com/agentable/golang-skills.git
+	shallow = true
