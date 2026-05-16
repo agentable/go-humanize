@@ -22,6 +22,7 @@ relative time, numbers, ordinals, percentages, and count phrases.
   `BinaryBytes` text
 - `ParseDuration(string) (time.Duration, error)`: parses canonical `Duration`
   text
+- `ErrInvalid`: sentinel used by parse failures
 
 ## Error Contract
 
@@ -56,7 +57,23 @@ relative time, numbers, ordinals, percentages, and count phrases.
 - Text utilities or truncation helpers
 - Builders, config structs, or formatting options
 
+## API Admission
+
+- New exported symbols must be added to `SPECS/20-api-specs.md` first
+- Public API must remain explainable in one README API section
+- Parsing changes must preserve canonical-only acceptance
+- Rejected expansions are recorded in `SPECS/30-design-decisions.md`
+
+## Verification
+
+- `task test`: race-enabled test suite
+- `task bench`: benchmark baseline
+- `task vuln`: govulncheck vulnerability scan
+- `task verify`: deps, formatting, vet, lint, tests, and vulnerability scan
+
 ## Docs
 
 - `README.md`
+- `SPECS/20-api-specs.md`
+- `SPECS/30-design-decisions.md`
 - [pkg.go.dev](https://pkg.go.dev/github.com/agentable/go-humanize)

@@ -1,10 +1,11 @@
-# Go Humanize Library
+# Go Humanize
 
-`go-humanize` formats machine values into human-readable English.
+Small, strict Go helpers for turning machine values into human-readable
+English display strings.
 
-It stays intentionally narrow: bytes, durations, relative time, numbers,
-ordinals, percentages, and count phrases. No builders, no option structs, no
-locale layer, and no runtime dependencies.
+`go-humanize` stays intentionally narrow: bytes, durations, relative time,
+numbers, ordinals, percentages, and count phrases. It has no runtime
+dependencies, no builders, no option structs, and no locale layer.
 
 > Humanized text is for display only. Never feed humanized text back into
 > protocols, schedulers, billing, or audit. Use raw integers, `time.Time`,
@@ -32,58 +33,59 @@ import (
 
 func main() {
 	ref := time.Date(2024, 2, 24, 12, 0, 0, 0, time.UTC)
+	twoHoursAgo := ref.Add(-2 * time.Hour)
 
-	fmt.Println(humanize.Bytes(1500))                        // "1.5 KB"
-	fmt.Println(humanize.BinaryBytes(1536))                  // "1.5 KiB"
-	fmt.Println(humanize.Relative(ref.Add(-2*time.Hour), ref)) // "2 hours ago"
-	fmt.Println(humanize.Number(1234567))                    // "1,234,567"
-	fmt.Println(humanize.Percent(0.333))                     // "33.3%"
-	fmt.Println(humanize.Count(1000, "item", "items"))       // "1,000 items"
+	fmt.Println(humanize.Bytes(1500))                  // "1.5 KB"
+	fmt.Println(humanize.BinaryBytes(1536))            // "1.5 KiB"
+	fmt.Println(humanize.Relative(twoHoursAgo, ref))   // "2 hours ago"
+	fmt.Println(humanize.Number(1234567))              // "1,234,567"
+	fmt.Println(humanize.Ordinal(3))                   // "3rd"
+	fmt.Println(humanize.Percent(0.333))               // "33.3%"
+	fmt.Println(humanize.Count(1000, "item", "items")) // "1,000 items"
 }
 ```
 
 ## API
 
-- `Bytes(int64) string` — decimal units (KB, MB, GB, ...)
-- `BinaryBytes(int64) string` — IEC binary units (KiB, MiB, GiB, ...)
-- `Number(int64) string` — comma-separated integers
-- `Percent(float64) string` — takes a fraction; `0.333` → `"33.3%"`
-- `Duration(time.Duration) string` — at most two descending units
-- `Relative(target, ref time.Time) string` — relative-time formatter
-- `Ordinal(int64) string` — English ordinal suffix
-- `Count(int64, singular, plural string) string` — count phrase
-- `ParseBytes(string) (int64, error)` — inverse of `Bytes` / `BinaryBytes`
-- `ParseDuration(string) (time.Duration, error)` — inverse of `Duration`
-- `ErrInvalid` — sentinel returned by parse failures
+| Function | Purpose | Example |
+|---|---|---|
+| `Bytes(int64) string` | Decimal byte units | `1500` → `"1.5 KB"` |
+| `BinaryBytes(int64) string` | IEC binary byte units | `1536` → `"1.5 KiB"` |
+| `Number(int64) string` | Comma-separated integers | `1234567` → `"1,234,567"` |
+| `Percent(float64) string` | Fraction to percentage | `0.333` → `"33.3%"` |
+| `Duration(time.Duration) string` | Up to two descending units | `90*time.Minute` → `"1h 30m"` |
+| `Relative(target, ref time.Time) string` | Relative time from an explicit reference | `"2 hours ago"` |
+| `Ordinal(int64) string` | English ordinal suffix | `3` → `"3rd"` |
+| `Count(int64, singular, plural string) string` | Count phrase with comma separators | `1000` → `"1,000 items"` |
+| `ParseBytes(string) (int64, error)` | Parse canonical byte display text | `"1.5 MiB"` → `1572864` |
+| `ParseDuration(string) (time.Duration, error)` | Parse canonical duration display text | `"1h 30m"` → `90*time.Minute` |
+| `ErrInvalid` | Sentinel wrapped by parse failures | `errors.Is(err, humanize.ErrInvalid)` |
 
 ## Behavior
 
 ### Bytes
 
-- `Bytes` is decimal by default because Finder, AWS/GCP consoles, and most
-  user-facing products use decimal byte units.
-- `BinaryBytes` is for the developer/sysadmin context (memory, block devices).
-- Output uses at most one decimal place.
-- `ParseBytes` accepts only text that round-trips through `Bytes` or
-  `BinaryBytes` unchanged. The parsed value represents the nearest byte
-  described by the display text, not the original source value before
-  formatting.
+- `Bytes` uses decimal units: `KB`, `MB`, `GB`, `TB`, `PB`, `EB`.
+- `BinaryBytes` uses IEC units: `KiB`, `MiB`, `GiB`, `TiB`, `PiB`, `EiB`.
+- Output uses at most one decimal place and drops trailing `.0`.
+- `ParseBytes` accepts only canonical text emitted by `Bytes` or
+  `BinaryBytes`.
 
 ### Duration
 
 - `Duration` shows at most two descending units.
 - Days are treated as 24 hours.
 - Sub-microsecond durations collapse to `"0s"`.
-- `ParseDuration` accepts only text that round-trips through `Duration`
-  unchanged. Day units (`d`) are supported because `time.ParseDuration`
-  cannot parse them.
+- `ParseDuration` accepts only canonical `Duration` output.
+- Day units (`d`) are supported because `time.ParseDuration` cannot parse them.
 
 ### Relative
 
 - `Relative(target, ref)` always requires an explicit reference time. There
   is no implicit `time.Now()` overload.
-- Cutovers: `60s → minute`, `60m → hour`, `24h → day`, `7d → week`,
-  `30d → month`, `345d → year`. Months are `30d`; years are `365d`.
+- Cutovers: `60s` to minute, `60m` to hour, `24h` to day, `7d` to week,
+  `30d` to month, `345d` to year.
+- Months are 30 days. Years are 365 days. There is no calendar math.
 
 ### Percent
 
@@ -91,9 +93,12 @@ func main() {
   `Percent(1)` → `"100%"`. Values above `1` are not clamped.
 - `NaN` and infinities render as `"NaN%"`, `"+Inf%"`, `"-Inf%"`.
 
-### Errors
+### Parsing
 
-- Parse failures wrap `ErrInvalid`. Use
+- Parsers reject leading and trailing whitespace.
+- Parsers reject non-canonical equivalents such as `"1KB"`, `"1.0 KB"`,
+  `"1000 KB"`, `"60s"`, and `"24h"`.
+- Parse failures wrap `ErrInvalid`; check with
   `errors.Is(err, humanize.ErrInvalid)`.
 
 ## Non-Goals
@@ -105,11 +110,18 @@ func main() {
 - Text utilities, truncation helpers, or string humanizers
 - Builders, config structs, or formatting options
 
+See [`SPECS/30-design-decisions.md`](./SPECS/30-design-decisions.md) for the
+standing rejection record behind these boundaries.
+
 ## Why It Stays Small
 
 Other humanize libraries grow into broad utility bundles. This package does
 the opposite on purpose: one obvious entry point per need, a short list of
-exported symbols, and a behavior contract that can be explained on one screen.
+exported symbols, and behavior that can be explained on one screen.
+
+`SPECS/20-api-specs.md` is the product contract. New public API must pass the
+admission rules in
+[`SPECS/20-api-specs.md`](./SPECS/20-api-specs.md).
 
 ## Development
 
@@ -118,7 +130,9 @@ task test          # Run all tests with race detection
 task lint          # Run golangci-lint v2.11.4 + go mod tidy check
 task fmt           # Format code
 task vet           # Run go vet
-task verify        # Full verification: deps, fmt, vet, lint, test
+task bench         # Run benchmark baseline
+task vuln          # Run govulncheck
+task verify        # Full verification: deps, fmt, vet, lint, test, vuln
 task deps          # Download and tidy dependencies
 task clean         # Clean build artifacts and caches
 ```

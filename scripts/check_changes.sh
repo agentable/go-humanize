@@ -12,10 +12,18 @@ if [[ -z "$latest_tag" ]]; then
   exit 0
 fi
 
-if git diff --quiet "$latest_tag"..HEAD -- '*.go'; then
+if git diff --quiet "$latest_tag"..HEAD -- \
+  '*.go' \
+  '.golangci.version' \
+  '.govulncheck.version' \
+  'README.md' \
+  'CLAUDE.md' \
+  'SPECS/*.md' \
+  'Taskfile.yml' \
+  'scripts/*.sh'; then
   :
 else
-  echo "Go source changed since ${latest_tag}; a new release tag is needed."
+  echo "Release-relevant files changed since ${latest_tag}; a new release tag is needed."
   exit 0
 fi
 

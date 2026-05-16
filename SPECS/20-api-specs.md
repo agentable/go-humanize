@@ -57,6 +57,31 @@ Errors:
 > **Rejected**: Builder types, config structs, interfaces, aliases, or
 > option-driven variants of the same formatter.
 
+## Public API Admission
+
+New exported symbols are allowed only when they preserve the package's small,
+stateless shape. A proposed public API must satisfy all of these rules:
+
+- It can be explained to a first-time caller in one sentence.
+- It is not a precision knob, option-driven variant, alias, or convenience
+  wrapper around an existing function.
+- It does not require locale data, calendar math, time zone rules, business
+  dictionaries, or caller-provided configuration.
+- Its output is display-only and unsuitable for protocols, schedulers, billing,
+  or audit records.
+- It has a clear reason it belongs in this package instead of at the call site.
+- It has table-driven tests, edge-case tests, fuzz coverage when parsing is
+  involved, and a godoc example.
+- The full public API still fits in the README API section without becoming a
+  catalog.
+
+> **Why**: Stable small APIs are protected by admission rules, not by adding
+> options after every new request.
+>
+> **Rejected**: Adding a public function because it is convenient in one product
+> flow, mirrors another library's broad surface, or could be configured into an
+> existing formatter.
+
 ## Behavior Contract
 
 ### Bytes
@@ -207,6 +232,7 @@ Examples:
   `math.Inf(±1)` where relevant
 - Keep assertions visible in the test body
 - Provide at least one `Example*` function for every public function
+- Keep parser fuzz tests for canonical round-trips and non-canonical rejection
 
 > **Why**: The package surface is small enough that visible edge-case tests
 > communicate behavior better than helper-heavy abstractions.

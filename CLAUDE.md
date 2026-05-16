@@ -11,9 +11,12 @@ describes coding and workflow rules for agents working in this repo.
 | Spec | Purpose |
 |------|---------|
 | `SPECS/20-api-specs.md` | Public API, formatter and parser behavior, coding rules, and testing requirements |
+| `SPECS/30-design-decisions.md` | Rejected design expansions and long-term scope boundaries |
 
 Before changing API behavior, parser rules, relative-time cutovers, or package
-scope, read `SPECS/20-api-specs.md` first.
+scope, read `SPECS/20-api-specs.md` first. Before adding anything that looks
+like locale support, custom precision, loose parsing, calendar language, or
+string utilities, read `SPECS/30-design-decisions.md`.
 
 ```go
 import (
@@ -25,12 +28,25 @@ import (
 humanize.Bytes(1500)                          // "1.5 KB"
 humanize.BinaryBytes(1536)                    // "1.5 KiB"
 ref := time.Now()
-humanize.Relative(ref.Add(-2*time.Hour), ref) // "2 hours ago"
+twoHoursAgo := ref.Add(-2 * time.Hour)
+humanize.Relative(twoHoursAgo, ref)           // "2 hours ago"
 humanize.Number(1234567)                      // "1,234,567"
 humanize.Ordinal(3)                           // "3rd"
 humanize.Percent(0.333)                       // "33.3%"
 humanize.Count(1000, "item", "items")         // "1,000 items"
 ```
+
+## Agent Workflow
+
+1. Read the relevant spec section before changing behavior.
+2. Keep the public API small and explicit; do not add options, builders,
+   interfaces, aliases, or convenience wrappers.
+3. Keep stability coverage in the existing domain test files
+   (`bytes_test.go`, `duration_test.go`, and so on). Do not create a separate
+   API-wide test file or extra verification task.
+4. Use table-driven stdlib tests with visible assertions.
+5. Run the narrowest useful test while developing, then run `task verify`
+   before handing off broad changes.
 
 ## Commands
 
@@ -39,7 +55,9 @@ task test          # Run all tests with race detection
 task lint          # Run golangci-lint v2.11.4 + go mod tidy check
 task fmt           # Format code
 task vet           # Run go vet
-task verify        # Full verification: deps, fmt, vet, lint, test
+task bench         # Run benchmark baseline
+task vuln          # Run govulncheck
+task verify        # Full verification: deps, fmt, vet, lint, test, vuln
 task deps          # Download and tidy dependencies
 task clean         # Clean build artifacts and caches
 ```
@@ -76,6 +94,7 @@ One file per domain. No `utils.go`, no `helpers.go`, no `common.go`.
 - **Graceful on All Inputs** — Every function handles zero, negative, and edge-case values without panicking. Format functions never return errors. Parse functions return `(value, error)`.
 - **Readability Over Precision** — Output optimized for human comprehension. Duration shows at most two significant units. Relative time uses approximate months (30 days) and years (365 days).
 - **No Compatibility Tax** — Backward compatibility is not a goal when it conflicts with a smaller and cleaner API surface.
+- **Documented Refusals** — Common expansion requests live in `SPECS/30-design-decisions.md` so the package can reject them consistently.
 
 ## Public API
 
@@ -136,5 +155,6 @@ Parse functions return `ErrInvalid` for malformed input:
 - **Framework:** stdlib assertions only (no testify)
 - **Patterns:** table-driven tests, `t.Parallel()` in all tests, `b.Loop()` in benchmarks (Go 1.26.2)
 - **Coverage:** all edge cases (zero, negative, `math.MaxInt64`, `math.MinInt64`, `math.NaN()`, `math.Inf(±1)`)
+- **Parser fuzzing:** keep canonical round-trip and non-canonical rejection fuzz tests next to the parser tests
 - **Examples:** every public function has at least one `Example*` function for godoc
 - **No test helpers that hide assertions** — use `t.Errorf` directly, keep test logic visible

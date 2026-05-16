@@ -30,6 +30,7 @@ func TestBytes(t *testing.T) {
 		// the formatter's own output.
 		{"1024 rounds to 1 KB", 1024, "1 KB"},
 		{"1049 rounds to 1 KB", 1049, "1 KB"},
+		{"999.5 KB promotes to 1 MB", 999500, "1 MB"},
 
 		// MB range
 		{"1 MB", 1000000, "1 MB"},
@@ -98,6 +99,7 @@ func TestBinaryBytes(t *testing.T) {
 		// Round-trip: values that round to an integer at one decimal
 		// place must drop the trailing zero.
 		{"1075 rounds to 1 KiB", 1075, "1 KiB"},
+		{"1023.5 KiB promotes to 1 MiB", 1024*1024 - 512, "1 MiB"},
 
 		// MiB range
 		{"1 MiB", 1024 * 1024, "1 MiB"},
@@ -157,6 +159,8 @@ func TestParseBytes(t *testing.T) {
 		{"bytes", "42 B", 42, false},
 		{"zero bytes", "0 B", 0, false},
 		{"upper byte range", "999 B", 999, false},
+		{"binary byte decimal boundary", "1000 B", 1000, false},
+		{"binary byte upper range", "1023 B", 1023, false},
 
 		// Decimal units
 		{"KB", "1 KB", 1000, false},
@@ -200,6 +204,7 @@ func TestParseBytes(t *testing.T) {
 		{"too many decimals", "1.55 MB", 0, true},
 		{"decimal too large", "10.5 MB", 0, true},
 		{"byte overflow form", "9223372036854775808 B", 0, true},
+		{"non-canonical byte unit", "1024 B", 0, true},
 		{"scaled positive overflow", "9.3 EB", 0, true},
 		{"scaled negative overflow", "-9.3 EB", 0, true},
 		{"unit overflow form", "1000 KB", 0, true},
@@ -207,6 +212,9 @@ func TestParseBytes(t *testing.T) {
 		{"invalid unit", "42 XB", 0, true},
 		{"invalid number", "abc KB", 0, true},
 		{"not a number", "NaN KB", 0, true},
+		{"leading plus", "+1 KB", 0, true},
+		{"positive infinity", "+Inf KB", 0, true},
+		{"negative infinity", "-Inf KB", 0, true},
 	}
 
 	for _, tt := range tests {
@@ -311,6 +319,80 @@ func TestBytesDisplaySyntaxParses(t *testing.T) {
 			})
 		}
 	}
+}
+
+func FuzzParseBytesRejectsNonCanonical(f *testing.F) {
+	seeds := []string{
+		"0 B",
+		"1 KB",
+		"1.5 MB",
+		"1 KiB",
+		"1.5 MiB",
+		"-1 KB",
+		"9.2 EB",
+		"8 EiB",
+		"",
+		"1KB",
+		"1.0 KB",
+		"1000 KB",
+		"1024 KiB",
+		"0 KB",
+		"1.5 B",
+		"NaN KB",
+		"+Inf KB",
+	}
+	for _, seed := range seeds {
+		f.Add(seed)
+	}
+
+	f.Fuzz(func(t *testing.T, s string) {
+		got, err := ParseBytes(s)
+		if err != nil {
+			if !errors.Is(err, ErrInvalid) {
+				t.Errorf("ParseBytes(%q) error = %v, want ErrInvalid", s, err)
+			}
+			return
+		}
+		if Bytes(got) != s && BinaryBytes(got) != s {
+			t.Errorf("ParseBytes(%q) = %d, accepted non-canonical byte form", s, got)
+		}
+	})
+}
+
+func FuzzParseBytesRoundTripCanonical(f *testing.F) {
+	seeds := []int64{
+		0,
+		1,
+		999,
+		1000,
+		1024,
+		1500,
+		1000 * 1000,
+		1024 * 1024,
+		math.MaxInt64,
+		math.MinInt64,
+	}
+	for _, seed := range seeds {
+		f.Add(seed, false)
+		f.Add(seed, true)
+	}
+
+	f.Fuzz(func(t *testing.T, value int64, binary bool) {
+		format := Bytes
+		if binary {
+			format = BinaryBytes
+		}
+
+		formatted := format(value)
+		parsed, err := ParseBytes(formatted)
+		if err != nil {
+			t.Errorf("ParseBytes(%q) unexpected error: %v", formatted, err)
+			return
+		}
+		if reformatted := format(parsed); reformatted != formatted {
+			t.Errorf("round-trip mismatch: %q -> %d -> %q", formatted, parsed, reformatted)
+		}
+	})
 }
 
 func BenchmarkBytes(b *testing.B) {

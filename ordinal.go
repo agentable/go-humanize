@@ -4,10 +4,6 @@ import (
 	"strconv"
 )
 
-var ordinalSuffixes = [10]string{
-	"th", "st", "nd", "rd", "th", "th", "th", "th", "th", "th",
-}
-
 // Ordinal formats n with an English ordinal suffix such as "1st", "23rd",
 // and "-3rd".
 func Ordinal(n int64) string {
@@ -25,7 +21,20 @@ func Ordinal(n int64) string {
 	if mod10 < 0 {
 		mod10 = -mod10
 	}
-	suffix := ordinalSuffixes[mod10]
+	suffix := ordinalSuffix(mod10)
 
 	return numStr + suffix
+}
+
+func ordinalSuffix(mod10 int64) string {
+	switch mod10 {
+	case 1:
+		return "st"
+	case 2:
+		return "nd"
+	case 3:
+		return "rd"
+	default:
+		return "th"
+	}
 }

@@ -220,6 +220,76 @@ func TestDurationDisplaySyntaxParses(t *testing.T) {
 	}
 }
 
+func FuzzParseDurationRejectsNonCanonical(f *testing.F) {
+	seeds := []string{
+		"0s",
+		"1s",
+		"1m",
+		"1h 30m",
+		"2d 5h",
+		"500ms",
+		"1ms 500µs",
+		"-1h 30m",
+		"",
+		"60s",
+		"24h",
+		"1000ms",
+		"1000µs",
+		"01h",
+		"-0s",
+		"500us",
+		"1h 30m 5s",
+	}
+	for _, seed := range seeds {
+		f.Add(seed)
+	}
+
+	f.Fuzz(func(t *testing.T, s string) {
+		got, err := ParseDuration(s)
+		if err != nil {
+			if !errors.Is(err, ErrInvalid) {
+				t.Errorf("ParseDuration(%q) error = %v, want ErrInvalid", s, err)
+			}
+			return
+		}
+		if formatted := Duration(got); formatted != s {
+			t.Errorf("ParseDuration(%q) = %v, accepted non-canonical duration form %q", s, got, formatted)
+		}
+	})
+}
+
+func FuzzParseDurationRoundTripCanonical(f *testing.F) {
+	seeds := []int64{
+		0,
+		int64(time.Nanosecond),
+		int64(time.Microsecond),
+		int64(time.Millisecond),
+		int64(time.Second),
+		int64(time.Minute),
+		int64(time.Hour),
+		int64(24 * time.Hour),
+		int64(90 * time.Minute),
+		math.MaxInt64,
+		math.MinInt64,
+	}
+	for _, seed := range seeds {
+		f.Add(seed)
+	}
+
+	f.Fuzz(func(t *testing.T, nanos int64) {
+		value := time.Duration(nanos)
+		formatted := Duration(value)
+		parsed, err := ParseDuration(formatted)
+		if err != nil {
+			t.Errorf("ParseDuration(%q) unexpected error: %v", formatted, err)
+			return
+		}
+		if reformatted := Duration(parsed); reformatted != formatted {
+			t.Errorf("round-trip mismatch: %q -> %v -> %q", formatted, parsed, reformatted)
+		}
+	})
+}
+
 func BenchmarkDuration(b *testing.B) {
 	durations := []time.Duration{
 		time.Second,

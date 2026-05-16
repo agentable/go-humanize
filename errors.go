@@ -1,6 +1,10 @@
 package humanize
 
-import "errors"
+type invalidError string
+
+func (e invalidError) Error() string {
+	return string(e)
+}
 
 // ErrInvalid reports malformed ParseBytes or ParseDuration input.
-var ErrInvalid = errors.New("invalid input")
+const ErrInvalid invalidError = "invalid input"

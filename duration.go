@@ -13,14 +13,7 @@ type durationUnit struct {
 	size time.Duration
 }
 
-var durationUnits = [...]durationUnit{
-	{"d", 24 * time.Hour},
-	{"h", time.Hour},
-	{"m", time.Minute},
-	{"s", time.Second},
-	{"ms", time.Millisecond},
-	{"µs", time.Microsecond},
-}
+const durationUnitCount = 6
 
 func absNegativeDuration(d time.Duration) time.Duration {
 	if d == time.Duration(math.MinInt64) {
@@ -46,7 +39,8 @@ func Duration(d time.Duration) string {
 	partsCount := 0
 	remaining := d
 
-	for _, u := range durationUnits {
+	for rank := range durationUnitCount {
+		u := durationUnitAt(rank)
 		if remaining < u.size {
 			continue
 		}
@@ -159,7 +153,8 @@ func parseDurationPart(part string) (int64, int, error) {
 		return 0, 0, fmt.Errorf("%w: invalid value in %q", ErrInvalid, part)
 	}
 
-	for i, u := range durationUnits {
+	for rank := range durationUnitCount {
+		u := durationUnitAt(rank)
 		if u.name != unit {
 			continue
 		}
@@ -168,8 +163,25 @@ func parseDurationPart(part string) (int64, int, error) {
 		if value > math.MaxInt64/sizeNanos {
 			return 0, 0, fmt.Errorf("%w: value out of range", ErrInvalid)
 		}
-		return value * sizeNanos, i, nil
+		return value * sizeNanos, rank, nil
 	}
 
 	return 0, 0, fmt.Errorf("%w: unknown unit in %q", ErrInvalid, part)
+}
+
+func durationUnitAt(rank int) durationUnit {
+	switch rank {
+	case 0:
+		return durationUnit{"d", 24 * time.Hour}
+	case 1:
+		return durationUnit{"h", time.Hour}
+	case 2:
+		return durationUnit{"m", time.Minute}
+	case 3:
+		return durationUnit{"s", time.Second}
+	case 4:
+		return durationUnit{"ms", time.Millisecond}
+	default:
+		return durationUnit{"µs", time.Microsecond}
+	}
 }
