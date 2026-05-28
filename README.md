@@ -17,7 +17,7 @@ dependencies, no builders, no option structs, and no locale layer.
 go get github.com/agentable/go-humanize
 ```
 
-Requires **Go 1.26.2**.
+Requires **Go 1.26.3**.
 
 ## Quick Taste
 
@@ -127,7 +127,7 @@ admission rules in
 
 ```bash
 task test          # Run all tests with race detection
-task lint          # Run golangci-lint v2.11.4 + go mod tidy check
+task lint          # Run golangci-lint v2.12.2 + go mod tidy check
 task fmt           # Format code
 task vet           # Run go vet
 task bench         # Run benchmark baseline

@@ -52,7 +52,7 @@ humanize.Count(1000, "item", "items")         // "1,000 items"
 
 ```bash
 task test          # Run all tests with race detection
-task lint          # Run golangci-lint v2.11.4 + go mod tidy check
+task lint          # Run golangci-lint v2.12.2 + go mod tidy check
 task fmt           # Format code
 task vet           # Run go vet
 task bench         # Run benchmark baseline
@@ -125,7 +125,7 @@ Parse functions return `ErrInvalid` for malformed input:
 
 ### Must Follow
 
-- **Go 1.26.2** — use modern builtins (`min`, `max`, `clear`), `slices`/`maps` packages, `for range N`, `b.Loop()` in benchmarks
+- **Go 1.26.3** — use modern builtins (`min`, `max`, `clear`), `slices`/`maps` packages, `for range N`, `b.Loop()` in benchmarks
 - **Zero dependencies** — standard library only, no external imports
 - **Single package** — flat namespace under `package humanize`, no subpackages
 - **English-only** — no i18n/l10n, locale-aware formatting is a different library's job
@@ -153,7 +153,7 @@ Parse functions return `ErrInvalid` for malformed input:
 ## Testing
 
 - **Framework:** stdlib assertions only (no testify)
-- **Patterns:** table-driven tests, `t.Parallel()` in all tests, `b.Loop()` in benchmarks (Go 1.26.2)
+- **Patterns:** table-driven tests, `t.Parallel()` in all tests, `b.Loop()` in benchmarks (Go 1.26.3)
 - **Coverage:** all edge cases (zero, negative, `math.MaxInt64`, `math.MinInt64`, `math.NaN()`, `math.Inf(±1)`)
 - **Parser fuzzing:** keep canonical round-trip and non-canonical rejection fuzz tests next to the parser tests
 - **Examples:** every public function has at least one `Example*` function for godoc

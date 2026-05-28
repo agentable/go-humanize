@@ -207,7 +207,7 @@ Examples:
 
 ## Coding Standards
 
-- Use Go 1.26.2
+- Use Go 1.26.3
 - Use the standard library only
 - Keep a single flat `humanize` package with no subpackages
 - Keep formatting functions stateless
