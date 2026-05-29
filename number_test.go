@@ -101,6 +101,8 @@ func TestPercent(t *testing.T) {
 
 		// Large values
 		{"very large", 9999.999, "999999.9%"},
+		{"max finite stays finite", math.MaxFloat64, "1.8e+310%"},
+		{"negative max finite stays finite", -math.MaxFloat64, "-1.8e+310%"},
 
 		// Special float values
 		{"NaN", math.NaN(), "NaN%"},

@@ -135,6 +135,7 @@ Examples:
 - Output uses at most one decimal place; integer percents drop the decimal
 - Sub-decimal fractions that round to zero render as `"0%"`
 - `NaN` renders as `"NaN%"`; `±Inf` render as `"+Inf%"` and `"-Inf%"`
+- Finite values stay finite; extremely large percentages may use scientific notation
 
 > **Why**: Fraction input matches `NSNumberFormatter.percentStyle`,
 > `Intl.NumberFormat({style:"percent"})`, and Excel's percent format. It also

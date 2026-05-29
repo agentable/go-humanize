@@ -92,6 +92,8 @@ func main() {
 - `Percent` takes a fraction: `Percent(0.333)` → `"33.3%"`,
   `Percent(1)` → `"100%"`. Values above `1` are not clamped.
 - `NaN` and infinities render as `"NaN%"`, `"+Inf%"`, `"-Inf%"`.
+- Extremely large finite percentages may use scientific notation, but they do
+  not render as infinity.
 
 ### Parsing
 
