@@ -37,13 +37,25 @@ func ExampleBinaryBytes() {
 }
 
 func ExampleParseBytes() {
-	kb, _ := humanize.ParseBytes("42 KB")
+	kb, err := humanize.ParseBytes("42 KB")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 	fmt.Println(kb)
 
-	mib, _ := humanize.ParseBytes("1.5 MiB")
+	mib, err := humanize.ParseBytes("1.5 MiB")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 	fmt.Println(mib)
 
-	gb, _ := humanize.ParseBytes("2.5 GB")
+	gb, err := humanize.ParseBytes("2.5 GB")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 	fmt.Println(gb)
 
 	if _, err := humanize.ParseBytes("garbage"); errors.Is(err, humanize.ErrInvalid) {
