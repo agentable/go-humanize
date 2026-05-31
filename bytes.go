@@ -136,31 +136,31 @@ func binaryByteUnit(exp int) string {
 // original source value before formatting.
 func ParseBytes(s string) (int64, error) {
 	if s == "" {
-		return 0, fmt.Errorf("%w: empty string", ErrInvalid)
+		return 0, fmt.Errorf("empty string: %w", ErrInvalid)
 	}
 	if s != strings.TrimSpace(s) {
-		return 0, fmt.Errorf("%w: leading or trailing whitespace", ErrInvalid)
+		return 0, fmt.Errorf("leading or trailing whitespace: %w", ErrInvalid)
 	}
 
 	numberPart, unitPart, ok := strings.Cut(s, " ")
 	if !ok || numberPart == "" || unitPart == "" || strings.Contains(unitPart, " ") {
-		return 0, fmt.Errorf("%w: expected \"<number> <unit>\"", ErrInvalid)
+		return 0, fmt.Errorf("expected \"<number> <unit>\": %w", ErrInvalid)
 	}
 	multiplier, format, ok := byteUnit(unitPart)
 	if !ok {
-		return 0, fmt.Errorf("%w: unknown unit %q", ErrInvalid, unitPart)
+		return 0, fmt.Errorf("unknown unit %q: %w", unitPart, ErrInvalid)
 	}
 
 	f, err := strconv.ParseFloat(numberPart, 64)
 	if err != nil {
-		return 0, fmt.Errorf("%w: %w", ErrInvalid, err)
+		return 0, fmt.Errorf("invalid number %q: %s: %w", numberPart, err.Error(), ErrInvalid)
 	}
 
 	result := math.Round(f * float64(multiplier))
 	var value int64
 	switch {
 	case math.IsNaN(result):
-		return 0, fmt.Errorf("%w: invalid number", ErrInvalid)
+		return 0, fmt.Errorf("invalid number: %w", ErrInvalid)
 	case result >= float64(math.MaxInt64):
 		value = math.MaxInt64
 	case result <= float64(math.MinInt64):
@@ -170,12 +170,12 @@ func ParseBytes(s string) (int64, error) {
 	}
 	if unitPart == "B" {
 		if Bytes(value) != s && BinaryBytes(value) != s {
-			return 0, fmt.Errorf("%w: non-canonical byte form", ErrInvalid)
+			return 0, fmt.Errorf("non-canonical byte form: %w", ErrInvalid)
 		}
 		return value, nil
 	}
 	if format(value) != s {
-		return 0, fmt.Errorf("%w: non-canonical byte form", ErrInvalid)
+		return 0, fmt.Errorf("non-canonical byte form: %w", ErrInvalid)
 	}
 
 	return value, nil

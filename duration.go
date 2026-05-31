@@ -73,10 +73,10 @@ func Duration(d time.Duration) string {
 // ErrInvalid for malformed or non-canonical input.
 func ParseDuration(s string) (time.Duration, error) {
 	if s == "" {
-		return 0, fmt.Errorf("%w: empty string", ErrInvalid)
+		return 0, fmt.Errorf("empty string: %w", ErrInvalid)
 	}
 	if s != strings.TrimSpace(s) {
-		return 0, fmt.Errorf("%w: leading or trailing whitespace", ErrInvalid)
+		return 0, fmt.Errorf("leading or trailing whitespace: %w", ErrInvalid)
 	}
 	original := s
 
@@ -85,12 +85,12 @@ func ParseDuration(s string) (time.Duration, error) {
 		neg = true
 		s = rest
 	} else if _, ok := strings.CutPrefix(s, "+"); ok {
-		return 0, fmt.Errorf("%w: leading plus sign is not supported", ErrInvalid)
+		return 0, fmt.Errorf("leading plus sign is not supported: %w", ErrInvalid)
 	}
 
 	first, second, hasSecond := strings.Cut(s, " ")
 	if hasSecond && (second == "" || strings.Contains(second, " ")) {
-		return 0, fmt.Errorf("%w: invalid duration", ErrInvalid)
+		return 0, fmt.Errorf("invalid duration: %w", ErrInvalid)
 	}
 
 	total := int64(0)
@@ -101,13 +101,13 @@ func ParseDuration(s string) (time.Duration, error) {
 			return err
 		}
 		if nanos == 0 && part != "0s" {
-			return fmt.Errorf("%w: zero value must be expressed as 0s", ErrInvalid)
+			return fmt.Errorf("zero value must be expressed as 0s: %w", ErrInvalid)
 		}
 		if prevRank >= 0 && rank <= prevRank {
-			return fmt.Errorf("%w: units must be in descending order", ErrInvalid)
+			return fmt.Errorf("units must be in descending order: %w", ErrInvalid)
 		}
 		if nanos > math.MaxInt64-total {
-			return fmt.Errorf("%w: value out of range", ErrInvalid)
+			return fmt.Errorf("value out of range: %w", ErrInvalid)
 		}
 		total += nanos
 		prevRank = rank
@@ -128,7 +128,7 @@ func ParseDuration(s string) (time.Duration, error) {
 		value = -value
 	}
 	if Duration(value) != original {
-		return 0, fmt.Errorf("%w: non-canonical duration form", ErrInvalid)
+		return 0, fmt.Errorf("non-canonical duration form: %w", ErrInvalid)
 	}
 
 	return value, nil
@@ -143,14 +143,14 @@ func parseDurationPart(part string) (int64, int, error) {
 		}
 	}
 	if split == 0 || split == len(part) {
-		return 0, 0, fmt.Errorf("%w: unknown unit in %q", ErrInvalid, part)
+		return 0, 0, fmt.Errorf("unknown unit in %q: %w", part, ErrInvalid)
 	}
 
 	valueStr := part[:split]
 	unit := part[split:]
 	value, err := strconv.ParseInt(valueStr, 10, 64)
 	if err != nil {
-		return 0, 0, fmt.Errorf("%w: invalid value in %q", ErrInvalid, part)
+		return 0, 0, fmt.Errorf("invalid value in %q: %s: %w", part, err.Error(), ErrInvalid)
 	}
 
 	for rank := range durationUnitCount {
@@ -161,12 +161,12 @@ func parseDurationPart(part string) (int64, int, error) {
 
 		sizeNanos := int64(u.size)
 		if value > math.MaxInt64/sizeNanos {
-			return 0, 0, fmt.Errorf("%w: value out of range", ErrInvalid)
+			return 0, 0, fmt.Errorf("value out of range: %w", ErrInvalid)
 		}
 		return value * sizeNanos, rank, nil
 	}
 
-	return 0, 0, fmt.Errorf("%w: unknown unit in %q", ErrInvalid, part)
+	return 0, 0, fmt.Errorf("unknown unit in %q: %w", part, ErrInvalid)
 }
 
 func durationUnitAt(rank int) durationUnit {

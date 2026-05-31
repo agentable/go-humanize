@@ -408,8 +408,12 @@ func BenchmarkBinaryBytes(b *testing.B) {
 }
 
 func BenchmarkParseBytes(b *testing.B) {
+	const input = "2.5 GB"
+
 	for b.Loop() {
-		_, _ = ParseBytes("2.5 GB")
+		if _, err := ParseBytes(input); err != nil {
+			b.Fatalf("ParseBytes(%q) error = %v", input, err)
+		}
 	}
 }
 

@@ -321,7 +321,9 @@ func BenchmarkParseDuration(b *testing.B) {
 
 	for b.Loop() {
 		for _, s := range inputs {
-			_, _ = ParseDuration(s)
+			if _, err := ParseDuration(s); err != nil {
+				b.Fatalf("ParseDuration(%q) error = %v", s, err)
+			}
 		}
 	}
 }

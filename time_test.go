@@ -103,24 +103,25 @@ func TestRelative(t *testing.T) {
 func TestRelativeEdgeCases(t *testing.T) {
 	t.Parallel()
 
-	now := time.Now()
+	ref := time.Date(2024, 2, 24, 12, 0, 0, 0, time.UTC)
 
 	tests := []struct {
-		name string
-		t    time.Time
+		name   string
+		target time.Time
+		want   string
 	}{
-		{"zero time", time.Time{}},
-		{"unix epoch", time.Unix(0, 0)},
-		{"far future", time.Unix(253402300799, 0)}, // Year 9999
+		{name: "zero time", target: time.Time{}, want: "292 years ago"},
+		{name: "unix epoch", target: time.Unix(0, 0).UTC(), want: "54 years ago"},
+		{name: "far future", target: time.Unix(253402300799, 0).UTC(), want: "in 292 years"}, // Year 9999
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := Relative(tt.t, now)
-			if got == "" {
-				t.Errorf("Relative(%v, %v) returned empty string", tt.t, now)
+			got := Relative(tt.target, ref)
+			if got != tt.want {
+				t.Errorf("Relative(%v, %v) = %q, want %q", tt.target, ref, got, tt.want)
 			}
 		})
 	}

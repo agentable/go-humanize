@@ -105,13 +105,25 @@ func ExampleDuration() {
 }
 
 func ExampleParseDuration() {
-	d1, _ := humanize.ParseDuration("1h 30m")
+	d1, err := humanize.ParseDuration("1h 30m")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 	fmt.Println(d1)
 
-	d2, _ := humanize.ParseDuration("2d 5h")
+	d2, err := humanize.ParseDuration("2d 5h")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 	fmt.Println(d2)
 
-	d3, _ := humanize.ParseDuration("500ms")
+	d3, err := humanize.ParseDuration("500ms")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 	fmt.Println(d3)
 	// Output:
 	// 1h30m0s
