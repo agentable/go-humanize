@@ -58,6 +58,8 @@ func TestDuration(t *testing.T) {
 		{"1h 30m 45s shows only 1h 30m", time.Hour + 30*time.Minute + 45*time.Second, "1h 30m"},
 		{"2d 5h 30m shows only 2d 5h", 2*24*time.Hour + 5*time.Hour + 30*time.Minute, "2d 5h"},
 		{"1m 30s 500ms shows only 1m 30s", time.Minute + 30*time.Second + 500*time.Millisecond, "1m 30s"},
+		{"1h 1s skips zero minute unit", time.Hour + time.Second, "1h 1s"},
+		{"1d 1µs skips empty lower units", 24*time.Hour + time.Microsecond, "1d 1µs"},
 
 		// Negative durations
 		{"-1 second", -time.Second, "-1s"},
@@ -102,6 +104,7 @@ func TestParseDuration(t *testing.T) {
 		{"1 hour", "1h", time.Hour, false},
 		{"1h 30m", "1h 30m", 90 * time.Minute, false},
 		{"2h 15m", "2h 15m", 2*time.Hour + 15*time.Minute, false},
+		{"sparse hour-second pair", "1h 1s", time.Hour + time.Second, false},
 
 		// Days (extension over stdlib)
 		{"1 day", "1d", 24 * time.Hour, false},
@@ -109,6 +112,7 @@ func TestParseDuration(t *testing.T) {
 		{"1d 5h", "1d 5h", 29 * time.Hour, false},
 		{"2d 12h", "2d 12h", 60 * time.Hour, false},
 		{"7 days", "7d", 7 * 24 * time.Hour, false},
+		{"sparse day-microsecond pair", "1d 1µs", 24*time.Hour + time.Microsecond, false},
 		{"largest canonical day-hour pair", "106751d 23h", 106751*24*time.Hour + 23*time.Hour, false},
 		{"largest canonical negative day-hour pair", "-106751d 23h", -(106751*24*time.Hour + 23*time.Hour), false},
 
