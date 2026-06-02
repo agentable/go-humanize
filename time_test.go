@@ -168,6 +168,13 @@ func TestRelativeBoundaries(t *testing.T) {
 		{"364 days", now.Add(-364 * 24 * time.Hour), "1 year ago"},
 		{"365 days", now.Add(-365 * 24 * time.Hour), "1 year ago"},
 		{"366 days", now.Add(-366 * 24 * time.Hour), "1 year ago"},
+
+		// Future cutovers mirror past cutovers.
+		{"future 60 seconds", now.Add(60 * time.Second), "in 1 minute"},
+		{"future 24 hours", now.Add(24 * time.Hour), "in 1 day"},
+		{"future 7 days", now.Add(7 * 24 * time.Hour), "in 1 week"},
+		{"future 30 days", now.Add(30 * 24 * time.Hour), "in 1 month"},
+		{"future 345 days", now.Add(345 * 24 * time.Hour), "in 1 year"},
 	}
 
 	for _, tt := range tests {

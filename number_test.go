@@ -94,6 +94,10 @@ func TestPercent(t *testing.T) {
 		{"rounds to one decimal", 0.3333333, "33.3%"},
 		{"rounds up", 0.6666666, "66.7%"},
 		{"rounds half up", 0.123, "12.3%"},
+		{"rounds positive half-tenth up", 0.0005, "0.1%"},
+		{"rounds negative half-tenth down", -0.0005, "-0.1%"},
+		{"rounds near one up", 0.9995, "100%"},
+		{"rounds negative near one down", -0.9995, "-100%"},
 
 		// Sub-decimal collapses to 0%
 		{"very small rounds to zero", 0.0001, "0%"},
@@ -122,6 +126,22 @@ func TestPercent(t *testing.T) {
 				t.Errorf("Percent(%f) = %q, want %q", tt.in, got, tt.want)
 			}
 		})
+	}
+}
+
+func TestPercentFiniteLargeBoundary(t *testing.T) {
+	t.Parallel()
+
+	tests := []float64{
+		math.MaxFloat64 / 1000,
+		math.Nextafter(math.MaxFloat64/1000, math.Inf(1)),
+	}
+
+	for _, in := range tests {
+		got := Percent(in)
+		if got == "+Inf%" || got == "-Inf%" {
+			t.Errorf("Percent(%g) = %q, want finite output", in, got)
+		}
 	}
 }
 

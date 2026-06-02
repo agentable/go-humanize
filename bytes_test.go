@@ -215,6 +215,11 @@ func TestParseBytes(t *testing.T) {
 		{"numeric overflow", "1e309 KB", 0, true},
 		{"not a number", "NaN KB", 0, true},
 		{"leading plus", "+1 KB", 0, true},
+		{"scientific byte count", "1e3 B", 0, true},
+		{"scientific scaled count", "1e0 KB", 0, true},
+		{"bare decimal point", "1. KB", 0, true},
+		{"leading decimal point", ".5 KB", 0, true},
+		{"multiple zero bytes", "000 B", 0, true},
 		{"positive infinity", "+Inf KB", 0, true},
 		{"negative infinity", "-Inf KB", 0, true},
 	}
