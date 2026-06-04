@@ -15,8 +15,8 @@
 //   - [Relative] formats a target time relative to a reference time.
 //   - [Ordinal] adds an English ordinal suffix: "1st", "23rd".
 //   - [Count] joins a count and an English noun: "1,000 items".
-//   - [ParseBytes] and [ParseDuration] are the inverses of [Bytes] /
-//     [BinaryBytes] and [Duration]; they accept canonical output only.
+//   - [ParseBytes] and [ParseDuration] accept canonical [Bytes] /
+//     [BinaryBytes] and [Duration] output only.
 //
 // # Relative time cutovers
 //

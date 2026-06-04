@@ -3,6 +3,7 @@ package humanize
 import (
 	"errors"
 	"math"
+	"strconv"
 	"testing"
 	"time"
 )
@@ -195,6 +196,19 @@ func TestParseDuration(t *testing.T) {
 				t.Errorf("ParseDuration(%q) = %v, want %v", tt.in, got, tt.want)
 			}
 		})
+	}
+}
+
+func TestParseDurationInvalidValueWrapsCause(t *testing.T) {
+	t.Parallel()
+
+	const input = "9223372036854775808µs"
+	_, err := ParseDuration(input)
+	if !errors.Is(err, ErrInvalid) {
+		t.Errorf("ParseDuration(%q) error = %v, want ErrInvalid", input, err)
+	}
+	if !errors.Is(err, strconv.ErrRange) {
+		t.Errorf("ParseDuration(%q) error = %v, want strconv.ErrRange", input, err)
 	}
 }
 

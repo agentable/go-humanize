@@ -3,6 +3,7 @@ package humanize
 import (
 	"errors"
 	"math"
+	"strconv"
 	"testing"
 )
 
@@ -243,6 +244,19 @@ func TestParseBytes(t *testing.T) {
 				t.Errorf("ParseBytes(%q) = %d, want %d", tt.in, got, tt.want)
 			}
 		})
+	}
+}
+
+func TestParseBytesInvalidNumberWrapsCause(t *testing.T) {
+	t.Parallel()
+
+	const input = "abc KB"
+	_, err := ParseBytes(input)
+	if !errors.Is(err, ErrInvalid) {
+		t.Errorf("ParseBytes(%q) error = %v, want ErrInvalid", input, err)
+	}
+	if !errors.Is(err, strconv.ErrSyntax) {
+		t.Errorf("ParseBytes(%q) error = %v, want strconv.ErrSyntax", input, err)
 	}
 }
 

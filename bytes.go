@@ -158,7 +158,7 @@ func ParseBytes(s string) (int64, error) {
 
 	f, err := strconv.ParseFloat(numberPart, 64)
 	if err != nil {
-		return 0, fmt.Errorf("invalid number %q: %s: %w", numberPart, err.Error(), ErrInvalid)
+		return 0, fmt.Errorf("invalid number %q: %w: %w", numberPart, err, ErrInvalid)
 	}
 
 	result := math.Round(f * float64(multiplier))

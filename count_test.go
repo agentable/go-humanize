@@ -44,7 +44,7 @@ func TestCount(t *testing.T) {
 
 			got := Count(tt.count, tt.singular, tt.plural)
 			if got != tt.want {
-				t.Errorf("Count(%d, %q, %q) = %q; want %q",
+				t.Errorf("Count(%d, %q, %q) = %q, want %q",
 					tt.count, tt.singular, tt.plural, got, tt.want)
 			}
 		})

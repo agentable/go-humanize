@@ -160,7 +160,7 @@ func parseDurationPart(part string) (int64, int, error) {
 	unit := part[split:]
 	value, err := strconv.ParseInt(valueStr, 10, 64)
 	if err != nil {
-		return 0, 0, fmt.Errorf("invalid value in %q: %s: %w", part, err.Error(), ErrInvalid)
+		return 0, 0, fmt.Errorf("invalid value in %q: %w: %w", part, err, ErrInvalid)
 	}
 
 	for rank, u := range durationUnits() {
