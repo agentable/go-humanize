@@ -13,7 +13,18 @@ type durationUnit struct {
 	size time.Duration
 }
 
-const durationUnitCount = 6
+type durationUnitSet [6]durationUnit
+
+func durationUnits() durationUnitSet {
+	return durationUnitSet{
+		{name: "d", size: 24 * time.Hour},
+		{name: "h", size: time.Hour},
+		{name: "m", size: time.Minute},
+		{name: "s", size: time.Second},
+		{name: "ms", size: time.Millisecond},
+		{name: "µs", size: time.Microsecond},
+	}
+}
 
 func absNegativeDuration(d time.Duration) time.Duration {
 	if d == time.Duration(math.MinInt64) {
@@ -39,8 +50,7 @@ func Duration(d time.Duration) string {
 	partsCount := 0
 	remaining := d
 
-	for rank := range durationUnitCount {
-		u := durationUnitAt(rank)
+	for _, u := range durationUnits() {
 		if remaining < u.size {
 			continue
 		}
@@ -153,8 +163,7 @@ func parseDurationPart(part string) (int64, int, error) {
 		return 0, 0, fmt.Errorf("invalid value in %q: %s: %w", part, err.Error(), ErrInvalid)
 	}
 
-	for rank := range durationUnitCount {
-		u := durationUnitAt(rank)
+	for rank, u := range durationUnits() {
 		if u.name != unit {
 			continue
 		}
@@ -167,21 +176,4 @@ func parseDurationPart(part string) (int64, int, error) {
 	}
 
 	return 0, 0, fmt.Errorf("unknown unit in %q: %w", part, ErrInvalid)
-}
-
-func durationUnitAt(rank int) durationUnit {
-	switch rank {
-	case 0:
-		return durationUnit{"d", 24 * time.Hour}
-	case 1:
-		return durationUnit{"h", time.Hour}
-	case 2:
-		return durationUnit{"m", time.Minute}
-	case 3:
-		return durationUnit{"s", time.Second}
-	case 4:
-		return durationUnit{"ms", time.Millisecond}
-	default:
-		return durationUnit{"µs", time.Microsecond}
-	}
 }

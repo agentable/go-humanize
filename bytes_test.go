@@ -328,6 +328,36 @@ func TestBytesDisplaySyntaxParses(t *testing.T) {
 	}
 }
 
+func TestBytesPromotedUnitsParseCanonically(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name   string
+		value  int64
+		format func(int64) string
+		want   int64
+	}{
+		{name: "decimal promotes to next unit", value: 999500, format: Bytes, want: megabyte},
+		{name: "binary promotes to next unit", value: 1024*1024 - 512, format: BinaryBytes, want: mebibyte},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			formatted := tt.format(tt.value)
+			got, err := ParseBytes(formatted)
+			if err != nil {
+				t.Errorf("ParseBytes(%q) unexpected error: %v", formatted, err)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("ParseBytes(%q) = %d, want %d", formatted, got, tt.want)
+			}
+		})
+	}
+}
+
 func FuzzParseBytesRejectsNonCanonical(f *testing.F) {
 	seeds := []string{
 		"0 B",

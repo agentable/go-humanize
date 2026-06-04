@@ -26,21 +26,64 @@ const (
 	exbibyte
 )
 
+type byteScale struct {
+	unit string
+	size int64
+}
+
+type byteScales [7]byteScale
+
+func decimalByteScales() byteScales {
+	return byteScales{
+		{unit: "B", size: 1},
+		{unit: "KB", size: kilobyte},
+		{unit: "MB", size: megabyte},
+		{unit: "GB", size: gigabyte},
+		{unit: "TB", size: terabyte},
+		{unit: "PB", size: petabyte},
+		{unit: "EB", size: exabyte},
+	}
+}
+
+func binaryByteScales() byteScales {
+	return byteScales{
+		{unit: "B", size: 1},
+		{unit: "KiB", size: kibibyte},
+		{unit: "MiB", size: mebibyte},
+		{unit: "GiB", size: gibibyte},
+		{unit: "TiB", size: tebibyte},
+		{unit: "PiB", size: pebibyte},
+		{unit: "EiB", size: exbibyte},
+	}
+}
+
+func (scales *byteScales) find(unit string) (byteScale, bool) {
+	for _, scale := range scales {
+		if scale.unit == unit {
+			return scale, true
+		}
+	}
+	return byteScale{}, false
+}
+
 // Bytes formats b with decimal byte units such as "1.5 KB" and "2 MB".
 // It preserves the sign and saturates math.MinInt64 to math.MaxInt64 when
 // taking the absolute value.
 func Bytes(b int64) string {
-	return formatBytes(b, 1000, decimalByteUnit)
+	scales := decimalByteScales()
+	return formatBytes(b, &scales)
 }
 
 // BinaryBytes formats b with IEC binary byte units such as "1.5 KiB" and
 // "2 MiB". It preserves the sign and saturates math.MinInt64 to math.MaxInt64
 // when taking the absolute value.
 func BinaryBytes(b int64) string {
-	return formatBytes(b, 1024, binaryByteUnit)
+	scales := binaryByteScales()
+	return formatBytes(b, &scales)
 }
 
-func formatBytes(b int64, base int64, unitName func(int) string) string {
+func formatBytes(b int64, scales *byteScales) string {
+	base := scales[1].size
 	neg := b < 0
 	if b == math.MinInt64 {
 		b = math.MaxInt64
@@ -72,7 +115,7 @@ func formatBytes(b int64, base int64, unitName func(int) string) string {
 	}
 	number := strconv.FormatFloat(value, 'f', precision, 64)
 
-	return sign + number + " " + unitName(exp)
+	return sign + number + " " + scales[exp].unit
 }
 
 func bytePrecision(value float64) int {
@@ -88,44 +131,6 @@ func roundedByteValue(value float64, precision int) float64 {
 		return math.Round(value)
 	}
 	return math.Round(value*10) / 10
-}
-
-func decimalByteUnit(exp int) string {
-	switch exp {
-	case 0:
-		return "B"
-	case 1:
-		return "KB"
-	case 2:
-		return "MB"
-	case 3:
-		return "GB"
-	case 4:
-		return "TB"
-	case 5:
-		return "PB"
-	default:
-		return "EB"
-	}
-}
-
-func binaryByteUnit(exp int) string {
-	switch exp {
-	case 0:
-		return "B"
-	case 1:
-		return "KiB"
-	case 2:
-		return "MiB"
-	case 3:
-		return "GiB"
-	case 4:
-		return "TiB"
-	case 5:
-		return "PiB"
-	default:
-		return "EiB"
-	}
 }
 
 // ParseBytes parses s when it is a canonical Bytes or BinaryBytes result.
@@ -182,34 +187,13 @@ func ParseBytes(s string) (int64, error) {
 }
 
 func byteUnit(unit string) (int64, func(int64) string, bool) {
-	switch unit {
-	case "B":
-		return 1, Bytes, true
-	case "KB":
-		return kilobyte, Bytes, true
-	case "MB":
-		return megabyte, Bytes, true
-	case "GB":
-		return gigabyte, Bytes, true
-	case "TB":
-		return terabyte, Bytes, true
-	case "PB":
-		return petabyte, Bytes, true
-	case "EB":
-		return exabyte, Bytes, true
-	case "KiB":
-		return kibibyte, BinaryBytes, true
-	case "MiB":
-		return mebibyte, BinaryBytes, true
-	case "GiB":
-		return gibibyte, BinaryBytes, true
-	case "TiB":
-		return tebibyte, BinaryBytes, true
-	case "PiB":
-		return pebibyte, BinaryBytes, true
-	case "EiB":
-		return exbibyte, BinaryBytes, true
-	default:
-		return 0, nil, false
+	decimalScales := decimalByteScales()
+	if scale, ok := decimalScales.find(unit); ok {
+		return scale.size, Bytes, true
 	}
+	binaryScales := binaryByteScales()
+	if scale, ok := binaryScales.find(unit); ok {
+		return scale.size, BinaryBytes, true
+	}
+	return 0, nil, false
 }
