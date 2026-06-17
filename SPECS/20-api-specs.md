@@ -30,8 +30,6 @@ disagree with this file, this file wins.
 
 ## Canonical API
 
-Formatting:
-
 - `Bytes(int64) string`
 - `BinaryBytes(int64) string`
 - `Number(int64) string`
@@ -41,21 +39,12 @@ Formatting:
 - `Ordinal(int64) string`
 - `Count(int64, singular, plural string) string`
 
-Parsing:
-
-- `ParseBytes(string) (int64, error)`
-- `ParseDuration(string) (time.Duration, error)`
-
-Errors:
-
-- Parse failures wrap `ErrInvalid`
-- Callers should use `errors.Is(err, humanize.ErrInvalid)`
-
-> **Why**: Each formatting need has one obvious entry point, and parsing stays
-> explicit and opt-in.
+> **Why**: Each formatting need has one obvious entry point. Display text is
+> output, not an input grammar.
 >
 > **Rejected**: Builder types, config structs, interfaces, aliases, or
-> option-driven variants of the same formatter.
+> option-driven variants of the same formatter. Also rejected: public parsers
+> for humanized display text.
 
 ## Public API Admission
 
@@ -69,9 +58,9 @@ stateless shape. A proposed public API must satisfy all of these rules:
   dictionaries, or caller-provided configuration.
 - Its output is display-only and unsuitable for protocols, schedulers, billing,
   or audit records.
+- It does not parse humanized display text back into machine values.
 - It has a clear reason it belongs in this package instead of at the call site.
-- It has table-driven tests, edge-case tests, fuzz coverage when parsing is
-  involved, and a godoc example.
+- It has table-driven tests, edge-case tests, and a godoc example.
 - The full public API still fits in the README API section without becoming a
   catalog.
 
@@ -92,30 +81,9 @@ stateless shape. A proposed public API must satisfy all of these rules:
 - Integers do not show trailing `.0`
 - The package does not export byte unit constants
 
-> **Why**: Decimal is what user-facing products (Finder, AWS/GCP consoles,
-> consumer storage) display; binary is the developer/sysadmin variant.
-
-### ParseBytes
-
-- Input shape is exactly `"<number> <unit>"`
-- Leading or trailing whitespace is rejected
-- Units must be canonical units emitted by the formatter
-- Input is accepted only if it round-trips through `Bytes` or `BinaryBytes`
-  unchanged
-- The parsed value represents the nearest byte described by the display text,
-  not the original source value before formatting
-- `ParseBytes` parses display syntax, not loose user input
-
-Examples:
-
-- Accepted: `1 KB`, `1.5 MB`, `42 MiB`, `0 B`
-- Rejected: `1KB`, `1.0 KB`, `1000 KB`, `1024 KiB`, `0 KB`, `1.5 B`
-
-> **Why**: Byte parsing is for the library's own display language, not for
-> cleaning up arbitrary user input.
->
-> **Rejected**: Permissive parsing that accepts alternate spacing, aliases, or
-> non-canonical values.
+> **Why**: Decimal is the reader-facing default for storage quantities; binary
+> is the developer/sysadmin variant for values that are naturally measured in
+> powers of two.
 
 ### Number
 
@@ -137,8 +105,7 @@ Examples:
 - `NaN` renders as `"NaN%"`; `±Inf` render as `"+Inf%"` and `"-Inf%"`
 - Finite values stay finite; extremely large percentages may use scientific notation
 
-> **Why**: Fraction input matches `NSNumberFormatter.percentStyle`,
-> `Intl.NumberFormat({style:"percent"})`, and Excel's percent format. It also
+> **Why**: Fraction input matches established percent-formatting convention and
 > separates formatting from the multiply-by-100 conversion.
 
 ### Duration
@@ -148,23 +115,11 @@ Examples:
 - Nanoseconds below `1µs` collapse to `0s`
 - Microseconds are written as `µs`
 
-### ParseDuration
-
-- Input is accepted only if it round-trips through `Duration` unchanged
-- Leading or trailing whitespace is rejected
-- Day units are supported because `time.ParseDuration` does not support them
-- `ParseDuration` parses display syntax, not loose user input
-
-Examples:
-
-- Accepted: `1h 30m`, `2d 5h`, `500ms`, `0s`
-- Rejected: `60s`, `24h`, `1000ms`, `1000µs`, `01h`, `-0s`, `500us`
-
 > **Why**: Duration text should optimize for readability first and preserve a
-> single canonical display form.
+> single display form.
 >
-> **Rejected**: Unlimited precision, alternate unit spellings, or parser
-> behavior that accepts values the formatter never emits.
+> **Rejected**: Unlimited precision, alternate unit spellings, or parsing
+> display text back into `time.Duration`.
 
 ### Relative Time
 
@@ -204,6 +159,7 @@ Examples:
 - Friendly calendar vocabulary such as `yesterday` or `tomorrow`
 - Text utilities, truncation helpers, or string humanizers
 - Builders, config structs, interfaces, or formatting options
+- Parsing humanized display text
 - Implicit `time.Now()` overloads
 
 ## Coding Standards
@@ -233,7 +189,6 @@ Examples:
   `math.Inf(±1)` where relevant
 - Keep assertions visible in the test body
 - Provide at least one `Example*` function for every public function
-- Keep parser fuzz tests for canonical round-trips and non-canonical rejection
 
 > **Why**: The package surface is small enough that visible edge-case tests
 > communicate behavior better than helper-heavy abstractions.
@@ -252,7 +207,10 @@ Examples:
   Keep the package focused on numeric and time formatting.
 - Do not add builders, config structs, interfaces, or formatting options. Add
   a separate function only when the behavior is genuinely distinct.
+- Do not add public parsers for humanized display text. Use raw integers,
+  `time.Time`, or `time.Duration` at protocol, scheduler, billing, and audit
+  boundaries.
 - Do not export byte unit constants. Keep the display language internal to the
-  formatters and parsers.
+  formatters.
 - Do not add an implicit `time.Now()` overload to `Relative`. Always require
   an explicit reference time.

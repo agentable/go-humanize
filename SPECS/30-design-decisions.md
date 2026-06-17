@@ -43,13 +43,14 @@ week`.
 Reason: friendly calendar language requires calendar math and cultural rules.
 This package uses approximate numeric buckets only.
 
-## Rejected: Loose Parsing
+## Rejected: Display Text Parsing
 
-`ParseBytes` and `ParseDuration` parse only canonical formatter output.
+`go-humanize` does not parse humanized display text back into machine values.
 
-Reason: permissive parsing expands the language indefinitely through aliases,
-spacing variants, casing variants, and non-canonical values. Strict parsing
-keeps the display language small and stable.
+Reason: even strict parsing turns display output into a protocol-shaped input
+language. Callers should keep raw integers, `time.Time`, and `time.Duration`
+for protocols, schedulers, billing, and audit, and use this package only at
+the display boundary.
 
 ## Rejected: Pluralization Engine
 

@@ -15,8 +15,6 @@
 //   - [Relative] formats a target time relative to a reference time.
 //   - [Ordinal] adds an English ordinal suffix: "1st", "23rd".
 //   - [Count] joins a count and an English noun: "1,000 items".
-//   - [ParseBytes] and [ParseDuration] accept canonical [Bytes] /
-//     [BinaryBytes] and [Duration] output only.
 //
 // # Relative time cutovers
 //
@@ -31,12 +29,4 @@
 //	[7d,   30d)        N weeks ago   / in N weeks
 //	[30d, 345d)        N months ago  / in N months
 //	>= 345d            N years ago   / in N years
-//
-// # Errors
-//
-// Format functions never return errors. Parse failures wrap [ErrInvalid]:
-//
-//	if _, err := humanize.ParseBytes(s); errors.Is(err, humanize.ErrInvalid) {
-//		// handle malformed input
-//	}
 package humanize

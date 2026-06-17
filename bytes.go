@@ -1,10 +1,8 @@
 package humanize
 
 import (
-	"fmt"
 	"math"
 	"strconv"
-	"strings"
 )
 
 const (
@@ -55,15 +53,6 @@ func binaryByteScales() byteScales {
 		{unit: "PiB", size: pebibyte},
 		{unit: "EiB", size: exbibyte},
 	}
-}
-
-func (scales *byteScales) find(unit string) (byteScale, bool) {
-	for _, scale := range scales {
-		if scale.unit == unit {
-			return scale, true
-		}
-	}
-	return byteScale{}, false
 }
 
 // Bytes formats b with decimal byte units such as "1.5 KB" and "2 MB".
@@ -131,69 +120,4 @@ func roundedByteValue(value float64, precision int) float64 {
 		return math.Round(value)
 	}
 	return math.Round(value*10) / 10
-}
-
-// ParseBytes parses s when it is a canonical Bytes or BinaryBytes result.
-// It accepts only the units B, KB, MB, GB, TB, PB, EB, KiB, MiB, GiB, TiB,
-// PiB, and EiB, with a single space between the number and unit.
-// It returns ErrInvalid for malformed or non-canonical input. The parsed
-// value represents the nearest byte described by the display text, not the
-// original source value before formatting.
-func ParseBytes(s string) (int64, error) {
-	if s == "" {
-		return 0, fmt.Errorf("empty string: %w", ErrInvalid)
-	}
-	if s != strings.TrimSpace(s) {
-		return 0, fmt.Errorf("leading or trailing whitespace: %w", ErrInvalid)
-	}
-
-	numberPart, unitPart, ok := strings.Cut(s, " ")
-	if !ok || numberPart == "" || unitPart == "" || strings.Contains(unitPart, " ") {
-		return 0, fmt.Errorf("expected \"<number> <unit>\": %w", ErrInvalid)
-	}
-	multiplier, format, ok := byteUnit(unitPart)
-	if !ok {
-		return 0, fmt.Errorf("unknown unit %q: %w", unitPart, ErrInvalid)
-	}
-
-	f, err := strconv.ParseFloat(numberPart, 64)
-	if err != nil {
-		return 0, fmt.Errorf("invalid number %q: %w: %w", numberPart, err, ErrInvalid)
-	}
-
-	result := math.Round(f * float64(multiplier))
-	var value int64
-	switch {
-	case math.IsNaN(result):
-		return 0, fmt.Errorf("invalid number: %w", ErrInvalid)
-	case result >= float64(math.MaxInt64):
-		value = math.MaxInt64
-	case result <= float64(math.MinInt64):
-		value = math.MinInt64
-	default:
-		value = int64(result)
-	}
-	if unitPart == "B" {
-		if Bytes(value) != s && BinaryBytes(value) != s {
-			return 0, fmt.Errorf("non-canonical byte form: %w", ErrInvalid)
-		}
-		return value, nil
-	}
-	if format(value) != s {
-		return 0, fmt.Errorf("non-canonical byte form: %w", ErrInvalid)
-	}
-
-	return value, nil
-}
-
-func byteUnit(unit string) (int64, func(int64) string, bool) {
-	decimalScales := decimalByteScales()
-	if scale, ok := decimalScales.find(unit); ok {
-		return scale.size, Bytes, true
-	}
-	binaryScales := binaryByteScales()
-	if scale, ok := binaryScales.find(unit); ok {
-		return scale.size, BinaryBytes, true
-	}
-	return 0, nil, false
 }

@@ -57,9 +57,6 @@ func main() {
 | `Relative(target, ref time.Time) string` | Relative time from an explicit reference | `"2 hours ago"` |
 | `Ordinal(int64) string` | English ordinal suffix | `3` → `"3rd"` |
 | `Count(int64, singular, plural string) string` | Count phrase with comma separators | `1000` → `"1,000 items"` |
-| `ParseBytes(string) (int64, error)` | Parse canonical byte display text | `"1.5 MiB"` → `1572864` |
-| `ParseDuration(string) (time.Duration, error)` | Parse canonical duration display text | `"1h 30m"` → `90*time.Minute` |
-| `ErrInvalid` | Sentinel wrapped by parse failures | `errors.Is(err, humanize.ErrInvalid)` |
 
 ## Behavior
 
@@ -68,16 +65,12 @@ func main() {
 - `Bytes` uses decimal units: `KB`, `MB`, `GB`, `TB`, `PB`, `EB`.
 - `BinaryBytes` uses IEC units: `KiB`, `MiB`, `GiB`, `TiB`, `PiB`, `EiB`.
 - Output uses at most one decimal place and drops trailing `.0`.
-- `ParseBytes` accepts only canonical text emitted by `Bytes` or
-  `BinaryBytes`.
 
 ### Duration
 
 - `Duration` shows at most two descending units.
 - Days are treated as 24 hours.
 - Sub-microsecond durations collapse to `"0s"`.
-- `ParseDuration` accepts only canonical `Duration` output.
-- Day units (`d`) are supported because `time.ParseDuration` cannot parse them.
 
 ### Relative
 
@@ -95,14 +88,6 @@ func main() {
 - Extremely large finite percentages may use scientific notation, but they do
   not render as infinity.
 
-### Parsing
-
-- Parsers reject leading and trailing whitespace.
-- Parsers reject non-canonical equivalents such as `"1KB"`, `"1.0 KB"`,
-  `"1000 KB"`, `"60s"`, and `"24h"`.
-- Parse failures wrap `ErrInvalid`; check with
-  `errors.Is(err, humanize.ErrInvalid)`.
-
 ## Non-Goals
 
 - Locale-aware formatting
@@ -111,6 +96,7 @@ func main() {
 - Friendly calendar words like `yesterday` or `tomorrow`
 - Text utilities, truncation helpers, or string humanizers
 - Builders, config structs, or formatting options
+- Parsing humanized display text
 
 See [`SPECS/30-design-decisions.md`](./SPECS/30-design-decisions.md) for the
 standing rejection record behind these boundaries.

@@ -10,13 +10,13 @@ describes coding and workflow rules for agents working in this repo.
 
 | Spec | Purpose |
 |------|---------|
-| `SPECS/20-api-specs.md` | Public API, formatter and parser behavior, coding rules, and testing requirements |
+| `SPECS/20-api-specs.md` | Public API, formatter behavior, coding rules, and testing requirements |
 | `SPECS/30-design-decisions.md` | Rejected design expansions and long-term scope boundaries |
 
-Before changing API behavior, parser rules, relative-time cutovers, or package
-scope, read `SPECS/20-api-specs.md` first. Before adding anything that looks
-like locale support, custom precision, loose parsing, calendar language, or
-string utilities, read `SPECS/30-design-decisions.md`.
+Before changing API behavior, formatter rules, relative-time cutovers, or
+package scope, read `SPECS/20-api-specs.md` first. Before adding anything that
+looks like locale support, custom precision, input parsing, calendar language,
+or string utilities, read `SPECS/30-design-decisions.md`.
 
 ```go
 import (
@@ -81,7 +81,6 @@ go-humanize/
 ├── time.go
 ├── ordinal.go
 ├── count.go
-├── errors.go
 └── doc.go
 ```
 
@@ -91,7 +90,7 @@ One file per domain. No `utils.go`, no `helpers.go`, no `common.go`.
 
 - **Stateless Formatting, No State** — Public formatting functions have no mutable package state.
 - **One Obvious Way** — Each formatting need has exactly one function. Variants are separate functions (`Bytes` vs `BinaryBytes`), not option parameters.
-- **Graceful on All Inputs** — Every function handles zero, negative, and edge-case values without panicking. Format functions never return errors. Parse functions return `(value, error)`.
+- **Graceful on All Inputs** — Every function handles zero, negative, and edge-case values without panicking. Public functions never return errors.
 - **Readability Over Precision** — Output optimized for human comprehension. Duration shows at most two significant units. Relative time uses approximate months (30 days) and years (365 days).
 - **No Compatibility Tax** — Backward compatibility is not a goal when it conflicts with a smaller and cleaner API surface.
 - **Documented Refusals** — Common expansion requests live in `SPECS/30-design-decisions.md` so the package can reject them consistently.
@@ -104,22 +103,6 @@ Formatting functions never return errors:
 - `Number`, `Percent`
 - `Duration`, `Relative`
 - `Ordinal`, `Count`
-
-Parse functions return `ErrInvalid` for malformed input:
-
-- `ParseBytes`
-- `ParseDuration`
-
-**Parse behavior:**
-
-- `ParseBytes` accepts the library's canonical units only: `B`, `KB`, `MB`, `GB`, `TB`, `PB`, `EB`, `KiB`, `MiB`, `GiB`, `TiB`, `PiB`, `EiB`
-- `ParseBytes` requires the canonical `"<number> <unit>"` shape with a single space
-- `ParseBytes` rejects leading or trailing whitespace
-- `ParseBytes` accepts only byte text that round-trips through `Bytes` / `BinaryBytes`
-- `ParseDuration` accepts canonical `Duration` output forms only, with up to two descending units
-- `ParseDuration` rejects leading or trailing whitespace
-- `ParseDuration` accepts only duration text that round-trips through `Duration`
-- Day units (`d`) are supported in `ParseDuration` because stdlib cannot parse them
 
 ## Coding Rules
 
@@ -140,10 +123,11 @@ Parse functions return `ErrInvalid` for malformed input:
 
 ### Forbidden
 
-- **No errors from format functions** — only parse functions return errors
+- **No errors from public functions** — display formatting is total and panic-free
 - **No `fmt.Stringer` types** — return plain `string`, don't wrap in custom types
 - **No interfaces** — the API is stateless functions, no `Formatter`, `Humanizer`, or `Renderer` interfaces
 - **No functional options** — separate functions for variants, not option parameters
+- **No display parsers** — humanized text is output, not a public input grammar
 - **No `sync.Pool`** — unless profiling proves allocation pressure
 - **No reflection** — type-safe code throughout
 - **No sub-second relative time** — `< 1 second` → `"just now"`
@@ -155,6 +139,5 @@ Parse functions return `ErrInvalid` for malformed input:
 - **Framework:** stdlib assertions only (no testify)
 - **Patterns:** table-driven tests, `t.Parallel()` in all tests, `b.Loop()` in benchmarks (Go 1.26.3)
 - **Coverage:** all edge cases (zero, negative, `math.MaxInt64`, `math.MinInt64`, `math.NaN()`, `math.Inf(±1)`)
-- **Parser fuzzing:** keep canonical round-trip and non-canonical rejection fuzz tests next to the parser tests
 - **Examples:** every public function has at least one `Example*` function for godoc
 - **No test helpers that hide assertions** — use `t.Errorf` directly, keep test logic visible

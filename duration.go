@@ -1,10 +1,8 @@
 package humanize
 
 import (
-	"fmt"
 	"math"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -76,104 +74,4 @@ func Duration(d time.Duration) string {
 		return "-" + result
 	}
 	return result
-}
-
-// ParseDuration parses s when it is a canonical Duration result.
-// It accepts day units in addition to time.ParseDuration units and returns
-// ErrInvalid for malformed or non-canonical input.
-func ParseDuration(s string) (time.Duration, error) {
-	if s == "" {
-		return 0, fmt.Errorf("empty string: %w", ErrInvalid)
-	}
-	if s != strings.TrimSpace(s) {
-		return 0, fmt.Errorf("leading or trailing whitespace: %w", ErrInvalid)
-	}
-	original := s
-
-	neg := false
-	if rest, ok := strings.CutPrefix(s, "-"); ok {
-		neg = true
-		s = rest
-	} else if _, ok := strings.CutPrefix(s, "+"); ok {
-		return 0, fmt.Errorf("leading plus sign is not supported: %w", ErrInvalid)
-	}
-
-	first, second, hasSecond := strings.Cut(s, " ")
-	if hasSecond && (second == "" || strings.Contains(second, " ")) {
-		return 0, fmt.Errorf("invalid duration: %w", ErrInvalid)
-	}
-
-	total := int64(0)
-	prevRank := -1
-	parsePart := func(part string) error {
-		nanos, rank, err := parseDurationPart(part)
-		if err != nil {
-			return err
-		}
-		if nanos == 0 && part != "0s" {
-			return fmt.Errorf("zero value must be expressed as 0s: %w", ErrInvalid)
-		}
-		if prevRank >= 0 && rank <= prevRank {
-			return fmt.Errorf("units must be in descending order: %w", ErrInvalid)
-		}
-		if nanos > math.MaxInt64-total {
-			return fmt.Errorf("value out of range: %w", ErrInvalid)
-		}
-		total += nanos
-		prevRank = rank
-		return nil
-	}
-
-	if err := parsePart(first); err != nil {
-		return 0, err
-	}
-	if hasSecond {
-		if err := parsePart(second); err != nil {
-			return 0, err
-		}
-	}
-
-	value := time.Duration(total)
-	if neg {
-		value = -value
-	}
-	if Duration(value) != original {
-		return 0, fmt.Errorf("non-canonical duration form: %w", ErrInvalid)
-	}
-
-	return value, nil
-}
-
-func parseDurationPart(part string) (int64, int, error) {
-	split := len(part)
-	for i := range len(part) {
-		if part[i] < '0' || part[i] > '9' {
-			split = i
-			break
-		}
-	}
-	if split == 0 || split == len(part) {
-		return 0, 0, fmt.Errorf("unknown unit in %q: %w", part, ErrInvalid)
-	}
-
-	valueStr := part[:split]
-	unit := part[split:]
-	value, err := strconv.ParseInt(valueStr, 10, 64)
-	if err != nil {
-		return 0, 0, fmt.Errorf("invalid value in %q: %w: %w", part, err, ErrInvalid)
-	}
-
-	for rank, u := range durationUnits() {
-		if u.name != unit {
-			continue
-		}
-
-		sizeNanos := int64(u.size)
-		if value > math.MaxInt64/sizeNanos {
-			return 0, 0, fmt.Errorf("value out of range: %w", ErrInvalid)
-		}
-		return value * sizeNanos, rank, nil
-	}
-
-	return 0, 0, fmt.Errorf("unknown unit in %q: %w", part, ErrInvalid)
 }

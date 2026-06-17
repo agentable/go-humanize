@@ -18,30 +18,15 @@ relative time, numbers, ordinals, percentages, and count phrases.
 - `Ordinal(int64) string`: ordinal suffix formatting
 - `Count(int64, singular, plural string) string`: count phrase with comma
   separators
-- `ParseBytes(string) (int64, error)`: parses canonical `Bytes` /
-  `BinaryBytes` text
-- `ParseDuration(string) (time.Duration, error)`: parses canonical `Duration`
-  text
-- `ErrInvalid`: sentinel used by parse failures
-
-## Error Contract
-
-- Parse failures wrap `ErrInvalid`; callers should use
-  `errors.Is(err, humanize.ErrInvalid)`
 
 ## Behavior
 
 - Bytes output uses at most one decimal place
-- `Bytes` is decimal because user-facing products (Finder, AWS/GCP consoles,
-  consumer storage) use decimal byte units
-- `BinaryBytes` is the developer/sysadmin variant (memory, block devices)
+- `Bytes` is the reader-facing decimal default for storage quantities
+- `BinaryBytes` is the developer/sysadmin variant for values measured in
+  powers of two
 - `Percent` accepts a fraction: `Percent(0.5)` → `"50%"`, not `"0.5%"`
-- `ParseBytes` requires `"<number> <unit>"` and only accepts text that
-  round-trips through `Bytes` or `BinaryBytes`
-- `ParseBytes` rejects leading or trailing whitespace
 - Duration output uses at most two descending units
-- `ParseDuration` accepts only text that round-trips through `Duration`
-- `ParseDuration` rejects leading or trailing whitespace
 - `Relative` cutovers: `<1s` just now, `60s` minute, `60m` hour, `24h` day,
   `7d` week, `30d` month, `345d` year
 - Months are `30` days; years are `365` days
@@ -56,12 +41,12 @@ relative time, numbers, ordinals, percentages, and count phrases.
 - Friendly calendar words like `yesterday` or `tomorrow`
 - Text utilities or truncation helpers
 - Builders, config structs, or formatting options
+- Parsing humanized display text
 
 ## API Admission
 
 - New exported symbols must be added to `SPECS/20-api-specs.md` first
 - Public API must remain explainable in one README API section
-- Parsing changes must preserve canonical-only acceptance
 - Rejected expansions are recorded in `SPECS/30-design-decisions.md`
 
 ## Verification

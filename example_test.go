@@ -1,7 +1,6 @@
 package humanize_test
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
@@ -34,38 +33,6 @@ func ExampleBinaryBytes() {
 	// 1.5 KiB
 	// 1 MiB
 	// 5 GiB
-}
-
-func ExampleParseBytes() {
-	kb, err := humanize.ParseBytes("42 KB")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(kb)
-
-	mib, err := humanize.ParseBytes("1.5 MiB")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(mib)
-
-	gb, err := humanize.ParseBytes("2.5 GB")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(gb)
-
-	if _, err := humanize.ParseBytes("garbage"); errors.Is(err, humanize.ErrInvalid) {
-		fmt.Println("invalid")
-	}
-	// Output:
-	// 42000
-	// 1572864
-	// 2500000000
-	// invalid
 }
 
 func ExampleNumber() {
@@ -102,33 +69,6 @@ func ExampleDuration() {
 	// 500ms
 	// 1h 30m
 	// 1d 5h
-}
-
-func ExampleParseDuration() {
-	d1, err := humanize.ParseDuration("1h 30m")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(d1)
-
-	d2, err := humanize.ParseDuration("2d 5h")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(d2)
-
-	d3, err := humanize.ParseDuration("500ms")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(d3)
-	// Output:
-	// 1h30m0s
-	// 53h0m0s
-	// 500ms
 }
 
 func ExampleRelative() {
