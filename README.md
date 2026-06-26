@@ -17,7 +17,7 @@ dependencies, no builders, no option structs, and no locale layer.
 go get github.com/agentable/go-humanize
 ```
 
-Requires **Go 1.26.3**.
+Requires **Go 1.26.4**.
 
 ## Quick Taste
 
