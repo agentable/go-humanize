@@ -16,7 +16,7 @@ func ExampleBytes() {
 	fmt.Println(humanize.Bytes(5 * gigabyte))
 	// Output:
 	// 0 B
-	// 1.5 KB
+	// 1.5 kB
 	// 1 MB
 	// 5 GB
 }

@@ -3,7 +3,7 @@
 Converts machine values into human-readable English strings. Small API, zero
 runtime dependencies, stateless formatting surface.
 
-`SPECS/20-api-specs.md` is the normative product contract. `CLAUDE.md`
+`SPECS/20-api-specs.md` records the current product contract. `CLAUDE.md`
 describes coding and workflow rules for agents working in this repo.
 
 ## SPECS Index
@@ -25,7 +25,7 @@ import (
 	"github.com/agentable/go-humanize"
 )
 
-humanize.Bytes(1500)                          // "1.5 KB"
+humanize.Bytes(1500)                          // "1.5 kB"
 humanize.BinaryBytes(1536)                    // "1.5 KiB"
 ref := time.Now()
 twoHoursAgo := ref.Add(-2 * time.Hour)
@@ -114,7 +114,7 @@ Formatting functions never return errors:
 - **English-only** — no i18n/l10n, locale-aware formatting is a different library's job
 - **Stateless formatting** — no package-level mutable state, no constructors, no interfaces
 - **Graceful edge cases** — format functions never panic or return errors
-- **At most one decimal place** — `"1.5 KB"` when needed, `"1 KB"` when not
+- **At most one decimal place** — `"1.5 kB"` when needed, `"1 kB"` when not
 - **Function naming** — name describes the intent (`Number` formats integers for a reader), no `Format` prefix, no `To` prefix
 - **Variants are separate functions** — `Bytes` vs `BinaryBytes`, not `Bytes(n, WithBinary())`
 - **Single relative-time API** — `Relative` is the only relative-time entry point; reference time is required

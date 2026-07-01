@@ -35,7 +35,7 @@ func main() {
 	ref := time.Date(2024, 2, 24, 12, 0, 0, 0, time.UTC)
 	twoHoursAgo := ref.Add(-2 * time.Hour)
 
-	fmt.Println(humanize.Bytes(1500))                  // "1.5 KB"
+	fmt.Println(humanize.Bytes(1500))                  // "1.5 kB"
 	fmt.Println(humanize.BinaryBytes(1536))            // "1.5 KiB"
 	fmt.Println(humanize.Relative(twoHoursAgo, ref))   // "2 hours ago"
 	fmt.Println(humanize.Number(1234567))              // "1,234,567"
@@ -49,7 +49,7 @@ func main() {
 
 | Function | Purpose | Example |
 |---|---|---|
-| `Bytes(int64) string` | Decimal byte units | `1500` → `"1.5 KB"` |
+| `Bytes(int64) string` | Decimal byte units | `1500` → `"1.5 kB"` |
 | `BinaryBytes(int64) string` | IEC binary byte units | `1536` → `"1.5 KiB"` |
 | `Number(int64) string` | Comma-separated integers | `1234567` → `"1,234,567"` |
 | `Percent(float64) string` | Fraction to percentage | `0.333` → `"33.3%"` |
@@ -62,7 +62,7 @@ func main() {
 
 ### Bytes
 
-- `Bytes` uses decimal units: `KB`, `MB`, `GB`, `TB`, `PB`, `EB`.
+- `Bytes` uses decimal units: `kB`, `MB`, `GB`, `TB`, `PB`, `EB`.
 - `BinaryBytes` uses IEC units: `KiB`, `MiB`, `GiB`, `TiB`, `PiB`, `EiB`.
 - Output uses at most one decimal place and drops trailing `.0`.
 

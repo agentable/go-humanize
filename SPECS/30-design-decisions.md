@@ -1,8 +1,8 @@
 # Design Decisions
 
 This file records stable product decisions that are likely to be requested
-again. `SPECS/20-api-specs.md` remains the normative behavior contract; this
-file explains why common expansions stay out of scope.
+again. `SPECS/20-api-specs.md` records the current behavior contract; this file
+explains why common expansions stay out of scope.
 
 ## Rejected: Locale-Aware Formatting
 

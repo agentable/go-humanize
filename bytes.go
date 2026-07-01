@@ -34,7 +34,7 @@ type byteScales [7]byteScale
 func decimalByteScales() byteScales {
 	return byteScales{
 		{unit: "B", size: 1},
-		{unit: "KB", size: kilobyte},
+		{unit: "kB", size: kilobyte},
 		{unit: "MB", size: megabyte},
 		{unit: "GB", size: gigabyte},
 		{unit: "TB", size: terabyte},
@@ -55,7 +55,7 @@ func binaryByteScales() byteScales {
 	}
 }
 
-// Bytes formats b with decimal byte units such as "1.5 KB" and "2 MB".
+// Bytes formats b with decimal byte units such as "1.5 kB" and "2 MB".
 // It preserves the sign and saturates math.MinInt64 to math.MaxInt64 when
 // taking the absolute value.
 func Bytes(b int64) string {

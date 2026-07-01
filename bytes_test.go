@@ -18,17 +18,17 @@ func TestBytes(t *testing.T) {
 		{"one byte", 1, "1 B"},
 		{"nine bytes", 9, "9 B"},
 
-		// KB range
-		{"1 KB", 1000, "1 KB"},
-		{"1.5 KB", 1500, "1.5 KB"},
-		{"10 KB", 10000, "10 KB"},
-		{"999 KB", 999000, "999 KB"},
+		// kB range
+		{"1 kB", 1000, "1 kB"},
+		{"1.5 kB", 1500, "1.5 kB"},
+		{"10 kB", 10000, "10 kB"},
+		{"999 kB", 999000, "999 kB"},
 
 		// Values that round to an integer at one decimal place must drop
 		// the trailing zero.
-		{"1024 rounds to 1 KB", 1024, "1 KB"},
-		{"1049 rounds to 1 KB", 1049, "1 KB"},
-		{"999.5 KB promotes to 1 MB", 999500, "1 MB"},
+		{"1024 rounds to 1 kB", 1024, "1 kB"},
+		{"1049 rounds to 1 kB", 1049, "1 kB"},
+		{"999.5 kB promotes to 1 MB", 999500, "1 MB"},
 
 		// MB range
 		{"1 MB", 1000000, "1 MB"},
@@ -54,7 +54,7 @@ func TestBytes(t *testing.T) {
 
 		// Negative values
 		{"-1 byte", -1, "-1 B"},
-		{"-1 KB", -1000, "-1 KB"},
+		{"-1 kB", -1000, "-1 kB"},
 		{"-1.5 MB", -1500000, "-1.5 MB"},
 		{"-5.5 GB", int64(-5.5 * float64(gigabyte)), "-5.5 GB"},
 

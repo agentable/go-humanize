@@ -7,7 +7,7 @@
 //
 // # API
 //
-//   - [Bytes] formats with decimal units (KB, MB, GB, ...).
+//   - [Bytes] formats with decimal units (kB, MB, GB, ...).
 //   - [BinaryBytes] formats with IEC binary units (KiB, MiB, GiB, ...).
 //   - [Number] formats integers with comma separators.
 //   - [Percent] takes a fraction: Percent(0.333) returns "33.3%".

@@ -2,8 +2,9 @@
 
 `go-humanize` formats machine values into human-readable English.
 
-This file is the normative product contract. If examples, comments, or older commits
-disagree with this file, this file wins.
+This file records the current accepted product contract. When code, tests,
+examples, or explicit project goals disagree, first settle the intended
+behavior in code and tests, then update this file to match.
 
 > **Why**: The package is intentionally small, so one contract file is enough to define
 > what belongs in the API and what does not.
@@ -75,7 +76,7 @@ stateless shape. A proposed public API must satisfy all of these rules:
 
 ### Bytes
 
-- `Bytes` uses decimal units: `KB`, `MB`, `GB`, `TB`, `PB`, `EB`
+- `Bytes` uses decimal units: `kB`, `MB`, `GB`, `TB`, `PB`, `EB`
 - `BinaryBytes` uses IEC binary units: `KiB`, `MiB`, `GiB`, `TiB`, `PiB`, `EiB`
 - Output uses at most one decimal place
 - Integers do not show trailing `.0`
