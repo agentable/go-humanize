@@ -165,7 +165,7 @@ stateless shape. A proposed public API must satisfy all of these rules:
 
 ## Coding Standards
 
-- Use Go 1.26.4
+- Use Go 1.26.5
 - Use the standard library only
 - Keep a single flat `humanize` package with no subpackages
 - Keep formatting functions stateless
