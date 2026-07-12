@@ -18,6 +18,14 @@ package scope, read `SPECS/20-api-specs.md` first. Before adding anything that
 looks like locale support, custom precision, input parsing, calendar language,
 or string utilities, read `SPECS/30-design-decisions.md`.
 
+## References Index
+
+| Reference | Use |
+|---|---|
+| `.references/go-humanize/` | Go API and formatter comparison evidence |
+| `.references/humanize/` | Python behavior and wide-range time comparison evidence |
+| `.references/php-humanizer/` | Independent unit-boundary comparison evidence |
+
 ```go
 import (
 	"time"
@@ -38,15 +46,28 @@ humanize.Count(1000, "item", "items")         // "1,000 items"
 
 ## Agent Workflow
 
-1. Read the relevant spec section before changing behavior.
-2. Keep the public API small and explicit; do not add options, builders,
+1. Read the relevant SPECS completely before designing or changing behavior.
+2. For new behavioral design, inspect at least two relevant projects under
+   `.references/` when applicable; treat them as evidence, not a feature list.
+3. Establish RED through public observable behavior. Do not manufacture RED
+   with tests of source text, private call order, or file layout.
+4. Keep the public API small and explicit; do not add options, builders,
    interfaces, aliases, or convenience wrappers.
-3. Keep stability coverage in the existing domain test files
+5. Keep stability coverage in the existing domain test files
    (`bytes_test.go`, `duration_test.go`, and so on). Do not create a separate
    API-wide test file or extra verification task.
-4. Use table-driven stdlib tests with visible assertions.
-5. Run the narrowest useful test while developing, then run `task verify`
+6. Use table-driven stdlib tests with visible assertions.
+7. Run the narrowest useful test while developing, then run `task verify`
    before handing off broad changes.
+
+## Agent Operating Rules
+
+- Read owning source, tests, SPECS, and relevant references before writing.
+- Keep changes surgical and prove the requested user path end to end.
+- Apply KISS, DRY, and YAGNI as judgment; share knowledge, not coincidental lines.
+- Prefer the standard library and existing project patterns before custom machinery.
+- Do not turn prose policies into custom gate scripts or redundant mirror tests.
+- Preserve failing evidence and surface blockers explicitly instead of weakening checks.
 
 ## Commands
 
@@ -133,6 +154,16 @@ Formatting functions never return errors:
 - **No sub-second relative time** — `< 1 second` → `"just now"`
 - **No calendar math** — days are 24h, months are 30 days, years are 365 days
 - **No premature abstraction** — three similar lines are better than a helper used once
+- **No documentation masquerading as code** — do not encode prose rules in values no program consumes
+- **No policy-only gates or spec-mirror tests** — verify runtime behavior instead of markdown wording or source layout
+- **No dependency workarounds** — report dependency defects in `reports/<dependency-name>.md` instead of reimplementing them
+
+## Dependency Issue Reporting
+
+When a tool or dependency is defective, record its name and version, trigger,
+expected and actual behavior, relevant output, and a suggested upstream fix in
+`reports/<dependency-name>.md`. Continue only with work that does not depend on
+the defect; do not replace the dependency with a local imitation.
 
 ## Testing
 
@@ -141,3 +172,15 @@ Formatting functions never return errors:
 - **Coverage:** all edge cases (zero, negative, `math.MaxInt64`, `math.MinInt64`, `math.NaN()`, `math.Inf(±1)`)
 - **Examples:** every public function has at least one `Example*` function for godoc
 - **No test helpers that hide assertions** — use `t.Errorf` directly, keep test logic visible
+
+## Agent Skills
+
+| Skill | When to Use |
+|---|---|
+| `.agents/skills/go-best-practices/` | Go naming, edge cases, tests, and idioms affect an implementation |
+| `.agents/skills/tdd-implementing/` | A behavior change can be driven through public RED-GREEN evidence |
+| `.agents/skills/code-review/` | Reviewing a completed change for regressions, safety, and missing tests |
+| `.agents/skills/improvement-proposing/` | Revising evidence-backed `improve.md` proposals |
+| `.agents/skills/spec-writing/` | Updating durable product contracts and acceptance criteria |
+| `.agents/skills/committing/` | Staging a narrow verified conventional commit |
+| `.agents/skills/releasing/` | Choosing, tagging, pushing, and verifying a Go module release |

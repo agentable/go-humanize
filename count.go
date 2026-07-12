@@ -10,5 +10,9 @@ func pluralForm(count int64, singular, plural string) string {
 // Count formats count with Number's comma separators and chooses singular
 // when count is ±1.
 func Count(count int64, singular, plural string) string {
-	return Number(count) + " " + pluralForm(count, singular, plural)
+	form := pluralForm(count, singular, plural)
+	if form == "" {
+		return Number(count)
+	}
+	return Number(count) + " " + form
 }

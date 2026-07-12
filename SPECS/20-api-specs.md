@@ -129,9 +129,17 @@ stateless shape. A proposed public API must satisfy all of these rules:
 - Durations under `1s` return `just now`
 - Cutovers:
   `60s -> minute`, `60m -> hour`, `24h -> day`, `7d -> week`,
-  `30d -> month`, `345d -> year`
+  `30d -> month`, `365d -> year`
+- Every cutover is the inclusive lower bound for its unit
+- Quantities count complete units; partial units are discarded
 - Months are `30d`
 - Years are `365d`
+- `345d..359d` render as `11 months`, `360d..364d` render as `12 months`,
+  and `365d` renders as `1 year`
+- Past and future differences use the same magnitude and unit; only the
+  direction phrase changes
+- Differences wider than `time.Duration` must retain their fixed 365-day year
+  quotient instead of saturating at `time.Time.Sub`'s duration limit
 
 > **Why**: Relative time should stay consistent, approximate, and easy to scan
 > instead of pretending to do calendar math. Requiring an explicit reference
@@ -145,6 +153,12 @@ stateless shape. A proposed public API must satisfy all of these rules:
 - `Count` includes comma separators by default
 - `Count` is the only public count/pluralization entry point
 - Human-readable output is the default path, not a composition pattern
+- Counts `1` and `-1` select the caller-provided singular form; every other
+  count selects the caller-provided plural form
+- If the selected form is empty, `Count` returns exactly `Number(count)` and
+  does not append separator whitespace
+- Non-empty forms are used as provided; `Count` does not trim, infer, or
+  normalize noun forms
 
 > **Why**: Counts should read naturally without asking callers to compose
 > lower-level helpers.
@@ -196,6 +210,31 @@ stateless shape. A proposed public API must satisfy all of these rules:
 >
 > **Rejected**: External assertion libraries, hidden assertion helpers, or
 > layout tests that only guard documentation structure.
+
+## Acceptance Criteria
+
+- Given a relative difference immediately below or at each unit cutover, when
+  `Relative` formats it, then the output uses the largest unit whose complete
+  lower bound has been reached. Verification path: table-driven tests in
+  `time_test.go`, especially `TestRelativeBoundaries`.
+- Given the same elapsed magnitude before and after a reference time, when
+  `Relative` formats both directions, then quantity and unit match while only
+  `ago` versus `in` changes. Verification path: `TestRelativeSymmetry` and the
+  future boundary cases in `time_test.go`.
+- Given two times whose difference exceeds `time.Duration`, when `Relative`
+  formats them, then it returns the complete fixed 365-day year quotient in
+  both directions. Verification path: `TestRelativeWideRange` in
+  `time_test.go`.
+- Given `Count` selects an empty singular or plural form, when it formats the
+  phrase, then the result equals `Number(count)` with no trailing space.
+  Verification path: empty-form cases in `TestCount` in `count_test.go`.
+
+The owning implementation paths are `time.go` and `count.go`. Reference
+evidence for boundary judgment lives in `.references/go-humanize/times.go`,
+`.references/humanize/src/humanize/time.py`,
+`.references/humanize/tests/test_time.py`, and
+`.references/go-humanize/english/words.go`. Reference behavior is evidence,
+not an expansion mandate for this package.
 
 ## Forbidden
 

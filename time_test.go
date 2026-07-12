@@ -1,7 +1,6 @@
 package humanize
 
 import (
-	"math"
 	"testing"
 	"time"
 )
@@ -69,10 +68,10 @@ func TestRelative(t *testing.T) {
 		{"2 months ago", now.Add(-60 * 24 * time.Hour), now, "2 months ago"},
 		{"6 months ago", now.Add(-180 * 24 * time.Hour), now, "6 months ago"},
 		{"11 months ago", now.Add(-330 * 24 * time.Hour), now, "11 months ago"},
-		{"almost 1 year ago", now.Add(-350 * 24 * time.Hour), now, "1 year ago"},
+		{"350 days ago", now.Add(-350 * 24 * time.Hour), now, "11 months ago"},
 		{"in 1 month", now.Add(30 * 24 * time.Hour), now, "in 1 month"},
 		{"in 3 months", now.Add(90 * 24 * time.Hour), now, "in 3 months"},
-		{"almost 1 year in future", now.Add(350 * 24 * time.Hour), now, "in 1 year"},
+		{"350 days in future", now.Add(350 * 24 * time.Hour), now, "in 11 months"},
 
 		// Years (365 days)
 		{"1 year ago", now.Add(-365 * 24 * time.Hour), now, "1 year ago"},
@@ -110,9 +109,9 @@ func TestRelativeEdgeCases(t *testing.T) {
 		target time.Time
 		want   string
 	}{
-		{name: "zero time", target: time.Time{}, want: "292 years ago"},
+		{name: "zero time", target: time.Time{}, want: "2024 years ago"},
 		{name: "unix epoch", target: time.Unix(0, 0).UTC(), want: "54 years ago"},
-		{name: "far future", target: time.Unix(253402300799, 0).UTC(), want: "in 292 years"}, // Year 9999
+		{name: "far future", target: time.Unix(253402300799, 0).UTC(), want: "in 7981 years"}, // Year 9999
 	}
 
 	for _, tt := range tests {
@@ -162,11 +161,15 @@ func TestRelativeBoundaries(t *testing.T) {
 		{"30 days", now.Add(-30 * 24 * time.Hour), "1 month ago"},
 		{"31 days", now.Add(-31 * 24 * time.Hour), "1 month ago"},
 
-		// Boundary between months and years (345-day cutover)
+		// Boundary between months and years (365-day cutover)
 		{"344 days", now.Add(-344 * 24 * time.Hour), "11 months ago"},
-		{"345 days", now.Add(-345 * 24 * time.Hour), "1 year ago"},
-		{"364 days", now.Add(-364 * 24 * time.Hour), "1 year ago"},
+		{"345 days", now.Add(-345 * 24 * time.Hour), "11 months ago"},
+		{"359 days", now.Add(-359 * 24 * time.Hour), "11 months ago"},
+		{"360 days", now.Add(-360 * 24 * time.Hour), "12 months ago"},
+		{"364 days", now.Add(-364 * 24 * time.Hour), "12 months ago"},
+		{"365 days minus 1ns", now.Add(-(365*24*time.Hour - time.Nanosecond)), "12 months ago"},
 		{"365 days", now.Add(-365 * 24 * time.Hour), "1 year ago"},
+		{"365 days plus 1ns", now.Add(-(365*24*time.Hour + time.Nanosecond)), "1 year ago"},
 		{"366 days", now.Add(-366 * 24 * time.Hour), "1 year ago"},
 
 		// Future cutovers mirror past cutovers.
@@ -174,7 +177,15 @@ func TestRelativeBoundaries(t *testing.T) {
 		{"future 24 hours", now.Add(24 * time.Hour), "in 1 day"},
 		{"future 7 days", now.Add(7 * 24 * time.Hour), "in 1 week"},
 		{"future 30 days", now.Add(30 * 24 * time.Hour), "in 1 month"},
-		{"future 345 days", now.Add(345 * 24 * time.Hour), "in 1 year"},
+		{"future 344 days", now.Add(344 * 24 * time.Hour), "in 11 months"},
+		{"future 345 days", now.Add(345 * 24 * time.Hour), "in 11 months"},
+		{"future 359 days", now.Add(359 * 24 * time.Hour), "in 11 months"},
+		{"future 360 days", now.Add(360 * 24 * time.Hour), "in 12 months"},
+		{"future 364 days", now.Add(364 * 24 * time.Hour), "in 12 months"},
+		{"future 365 days minus 1ns", now.Add(365*24*time.Hour - time.Nanosecond), "in 12 months"},
+		{"future 365 days", now.Add(365 * 24 * time.Hour), "in 1 year"},
+		{"future 365 days plus 1ns", now.Add(365*24*time.Hour + time.Nanosecond), "in 1 year"},
+		{"future 366 days", now.Add(366 * 24 * time.Hour), "in 1 year"},
 	}
 
 	for _, tt := range tests {
@@ -207,23 +218,48 @@ func TestRelativeSymmetry(t *testing.T) {
 	}
 }
 
-func TestRelativeSaturatedRange(t *testing.T) {
+func TestRelativeWideRange(t *testing.T) {
 	t.Parallel()
 
 	ancient := time.Time{}
 	farFuture := time.Unix(253402300799, 0).UTC()
+	year20000 := time.Date(20000, time.January, 1, 0, 0, 0, 0, time.UTC)
+	epochHalfSecond := time.Unix(0, 500_000_000).UTC()
+	thousandYears := int64(1000 * 365 * 24 * 60 * 60)
 
-	if diff := ancient.Sub(farFuture); diff != time.Duration(math.MinInt64) {
-		t.Fatalf("ancient.Sub(farFuture) = %v, want %v", diff, time.Duration(math.MinInt64))
+	tests := []struct {
+		name   string
+		target time.Time
+		ref    time.Time
+		want   string
+	}{
+		{name: "year 1 to year 9999", target: farFuture, ref: ancient, want: "in 10005 years"},
+		{name: "year 9999 to year 1", target: ancient, ref: farFuture, want: "10005 years ago"},
+		{name: "year 1 to year 20000", target: year20000, ref: ancient, want: "in 20012 years"},
+		{name: "year 20000 to year 1", target: ancient, ref: year20000, want: "20012 years ago"},
+		{
+			name:   "wide range one nanosecond before year boundary",
+			target: time.Unix(thousandYears, 499_999_999).UTC(),
+			ref:    epochHalfSecond,
+			want:   "in 999 years",
+		},
+		{
+			name:   "wide range exact year boundary",
+			target: time.Unix(thousandYears, 500_000_000).UTC(),
+			ref:    epochHalfSecond,
+			want:   "in 1000 years",
+		},
 	}
-	if diff := farFuture.Sub(ancient); diff != time.Duration(math.MaxInt64) {
-		t.Fatalf("farFuture.Sub(ancient) = %v, want %v", diff, time.Duration(math.MaxInt64))
-	}
-	if got := Relative(farFuture, ancient); got != "in 292 years" {
-		t.Errorf("Relative(farFuture, ancient) = %q, want %q", got, "in 292 years")
-	}
-	if got := Relative(ancient, farFuture); got != "292 years ago" {
-		t.Errorf("Relative(ancient, farFuture) = %q, want %q", got, "292 years ago")
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := Relative(tt.target, tt.ref)
+			if got != tt.want {
+				t.Errorf("Relative(%v, %v) = %q, want %q", tt.target, tt.ref, got, tt.want)
+			}
+		})
 	}
 }
 

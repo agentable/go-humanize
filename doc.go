@@ -27,6 +27,6 @@
 //	[60m,  24h)        N hours ago   / in N hours
 //	[24h,   7d)        N days ago    / in N days
 //	[7d,   30d)        N weeks ago   / in N weeks
-//	[30d, 345d)        N months ago  / in N months
-//	>= 345d            N years ago   / in N years
+//	[30d, 365d)        N months ago  / in N months
+//	>= 365d            N years ago   / in N years
 package humanize

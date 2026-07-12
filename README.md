@@ -77,8 +77,19 @@ func main() {
 - `Relative(target, ref)` always requires an explicit reference time. There
   is no implicit `time.Now()` overload.
 - Cutovers: `60s` to minute, `60m` to hour, `24h` to day, `7d` to week,
-  `30d` to month, `345d` to year.
+  `30d` to month, `365d` to year.
+- Cutovers are lower bounds and quantities count complete units. For example,
+  `359d` is 11 months, `364d` is 12 months, and `365d` is 1 year.
 - Months are 30 days. Years are 365 days. There is no calendar math.
+- Differences wider than `time.Duration` still render their fixed 365-day
+  year count instead of saturating.
+
+### Count
+
+- `Count` uses the singular form for `1` and `-1`, and the plural form for
+  every other count.
+- If the selected form is empty, `Count` returns only the comma-separated
+  number, with no trailing space.
 
 ### Percent
 

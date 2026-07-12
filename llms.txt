@@ -6,7 +6,7 @@ relative time, numbers, ordinals, percentages, and count phrases.
 
 ## Canonical API
 
-- `Bytes(int64) string`: decimal byte formatting using `KB`, `MB`, `GB`,
+- `Bytes(int64) string`: decimal byte formatting using `kB`, `MB`, `GB`,
   `TB`, `PB`, `EB`
 - `BinaryBytes(int64) string`: IEC binary byte formatting using `KiB`,
   `MiB`, `GiB`, `TiB`, `PiB`, `EiB`
@@ -28,7 +28,7 @@ relative time, numbers, ordinals, percentages, and count phrases.
 - `Percent` accepts a fraction: `Percent(0.5)` → `"50%"`, not `"0.5%"`
 - Duration output uses at most two descending units
 - `Relative` cutovers: `<1s` just now, `60s` minute, `60m` hour, `24h` day,
-  `7d` week, `30d` month, `345d` year
+  `7d` week, `30d` month, `365d` year
 - Months are `30` days; years are `365` days
 - Humanized text is for display only — never feed it back into protocols,
   schedulers, billing, or audit
