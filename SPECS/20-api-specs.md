@@ -216,20 +216,20 @@ stateless shape. A proposed public API must satisfy all of these rules:
 - Given a relative difference immediately below or at each unit cutover, when
   `Relative` formats it, then the output uses the largest unit whose complete
   lower bound has been reached. Verification path: table-driven tests in
-  `time_test.go`, especially `TestRelativeBoundaries`.
+  `relative_test.go`, especially `TestRelativeBoundaries`.
 - Given the same elapsed magnitude before and after a reference time, when
   `Relative` formats both directions, then quantity and unit match while only
   `ago` versus `in` changes. Verification path: `TestRelativeSymmetry` and the
-  future boundary cases in `time_test.go`.
+  future boundary cases in `relative_test.go`.
 - Given two times whose difference exceeds `time.Duration`, when `Relative`
   formats them, then it returns the complete fixed 365-day year quotient in
   both directions. Verification path: `TestRelativeWideRange` in
-  `time_test.go`.
+  `relative_test.go`.
 - Given `Count` selects an empty singular or plural form, when it formats the
   phrase, then the result equals `Number(count)` with no trailing space.
   Verification path: empty-form cases in `TestCount` in `count_test.go`.
 
-The owning implementation paths are `time.go` and `count.go`. Reference
+The owning implementation paths are `relative.go` and `count.go`. Reference
 evidence for boundary judgment lives in `.references/go-humanize/times.go`,
 `.references/humanize/src/humanize/time.py`,
 `.references/humanize/tests/test_time.py`, and

@@ -54,7 +54,7 @@ Reason: a unit label should mean that the complete unit has elapsed. Early or
 nearest-unit cutovers mix rounding with truncation, make the year divisor and
 cutover disagree, and weaken past/future boundary reasoning.
 
-Evidence: `time.go` and `time_test.go` own the local behavior. Comparison
+Evidence: `relative.go` and `relative_test.go` own the local behavior. Comparison
 sources include `.references/go-humanize/times.go`,
 `.references/go-humanize/times_test.go`, and
 `.references/php-humanizer/src/Coduo/PHPHumanizer/DateTime/Unit/Year.php`;

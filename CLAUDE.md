@@ -98,8 +98,9 @@ Single package with one file per domain:
 go-humanize/
 ├── bytes.go
 ├── number.go
+├── percent.go
 ├── duration.go
-├── time.go
+├── relative.go
 ├── ordinal.go
 ├── count.go
 └── doc.go
