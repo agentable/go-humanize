@@ -76,3 +76,7 @@ reports/*
 .meetings/
 .plans
 .codegraph/
+
+# Local planning and tooling state
+improves/*
+analytics.md

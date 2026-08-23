@@ -73,7 +73,7 @@ humanize.Count(1000, "item", "items")         // "1,000 items"
 
 ```bash
 task test          # Run all tests with race detection
-task lint          # Run golangci-lint v2.12.2 + go mod tidy check
+task lint          # Run golangci-lint v2.13.1 + go mod tidy check
 task fmt           # Format code
 task vet           # Run go vet
 task bench         # Run benchmark baseline
@@ -130,7 +130,7 @@ Formatting functions never return errors:
 
 ### Must Follow
 
-- **Go 1.26.5** — use modern builtins (`min`, `max`, `clear`), `slices`/`maps` packages, `for range N`, `b.Loop()` in benchmarks
+- **Go 1.27.0** — use modern builtins (`min`, `max`, `clear`), `slices`/`maps` packages, `for range N`, `b.Loop()` in benchmarks
 - **Zero dependencies** — standard library only, no external imports
 - **Single package** — flat namespace under `package humanize`, no subpackages
 - **English-only** — no i18n/l10n, locale-aware formatting is a different library's job
@@ -169,7 +169,7 @@ the defect; do not replace the dependency with a local imitation.
 ## Testing
 
 - **Framework:** stdlib assertions only (no testify)
-- **Patterns:** table-driven tests, `t.Parallel()` in all tests, `b.Loop()` in benchmarks (Go 1.26.5)
+- **Patterns:** table-driven tests, `t.Parallel()` in all tests, `b.Loop()` in benchmarks (Go 1.27.0)
 - **Coverage:** all edge cases (zero, negative, `math.MaxInt64`, `math.MinInt64`, `math.NaN()`, `math.Inf(±1)`)
 - **Examples:** every public function has at least one `Example*` function for godoc
 - **No test helpers that hide assertions** — use `t.Errorf` directly, keep test logic visible
