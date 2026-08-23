@@ -27,7 +27,7 @@ vars:
       echo "not-installed"
   GOVULNCHECK_BINARY: '{{.GOBIN}}/govulncheck'
   REQUIRED_GOVULNCHECK_VERSION:
-    sh: cat .govulncheck.version 2>/dev/null || echo "1.3.0"
+    sh: cat .govulncheck.version 2>/dev/null || echo "1.6.0"
   GOVULNCHECK_VERSION:
     sh: >-
       {{.GOVULNCHECK_BINARY}} -version 2>/dev/null |
