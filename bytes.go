@@ -96,27 +96,22 @@ func formatBytes(b int64, scales *byteScales) string {
 		exp++
 	}
 
-	precision := bytePrecision(value)
-	if exp < 6 && roundedByteValue(value, precision) >= float64(base) {
-		value /= float64(base)
+	value = roundedByteValue(value)
+	if exp < 6 && value >= float64(base) {
+		value = 1
 		exp++
-		precision = bytePrecision(value)
+	}
+	precision := 1
+	if value == math.Trunc(value) {
+		precision = 0
 	}
 	number := strconv.FormatFloat(value, 'f', precision, 64)
 
 	return sign + number + " " + scales[exp].unit
 }
 
-func bytePrecision(value float64) int {
-	rounded := math.Round(value*10) / 10
-	if value >= 10 || rounded == math.Trunc(rounded) {
-		return 0
-	}
-	return 1
-}
-
-func roundedByteValue(value float64, precision int) float64 {
-	if precision == 0 {
+func roundedByteValue(value float64) float64 {
+	if value >= 10 {
 		return math.Round(value)
 	}
 	return math.Round(value*10) / 10

@@ -79,7 +79,10 @@ stateless shape. A proposed public API must satisfy all of these rules:
 - `Bytes` uses decimal units: `kB`, `MB`, `GB`, `TB`, `PB`, `EB`
 - `BinaryBytes` uses IEC binary units: `KiB`, `MiB`, `GiB`, `TiB`, `PiB`, `EiB`
 - Output uses at most one decimal place
+- Scaled magnitudes below `10` round to one decimal; magnitudes from `10`
+  round to whole numbers, with nearest ties away from zero
 - Integers do not show trailing `.0`
+- Rounding into the unit base promotes to the next suffix when available
 - The package does not export byte unit constants
 
 > **Why**: Decimal is the reader-facing default for storage quantities; binary
@@ -104,7 +107,10 @@ stateless shape. A proposed public API must satisfy all of these rules:
 - Output uses at most one decimal place; integer percents drop the decimal
 - Sub-decimal fractions that round to zero render as `"0%"`
 - `NaN` renders as `"NaN%"`; `±Inf` render as `"+Inf%"` and `"-Inf%"`
-- Finite values stay finite; extremely large percentages may use scientific notation
+- Finite values stay finite; rounded percentage magnitudes from `1e6` use
+  scientific notation with at most one mantissa decimal and no trailing `.0`
+- Percent rounding uses nearest ties away from zero; scientific mantissa
+  carry advances the exponent, so `Percent(99999)` renders as `"1e+7%"`
 
 > **Why**: Fraction input matches established percent-formatting convention and
 > separates formatting from the multiply-by-100 conversion.

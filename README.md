@@ -64,7 +64,10 @@ func main() {
 
 - `Bytes` uses decimal units: `kB`, `MB`, `GB`, `TB`, `PB`, `EB`.
 - `BinaryBytes` uses IEC units: `KiB`, `MiB`, `GiB`, `TiB`, `PiB`, `EiB`.
-- Output uses at most one decimal place and drops trailing `.0`.
+- Scaled values below 10 use one decimal place; values from 10 use whole
+  numbers. Ties round away from zero, trailing `.0` is omitted, and rounding
+  into the next unit promotes the suffix: `Bytes(1250)` is `"1.3 kB"` and
+  `Bytes(999500)` is `"1 MB"`.
 
 ### Duration
 
@@ -96,8 +99,8 @@ func main() {
 - `Percent` takes a fraction: `Percent(0.333)` → `"33.3%"`,
   `Percent(1)` → `"100%"`. Values above `1` are not clamped.
 - `NaN` and infinities render as `"NaN%"`, `"+Inf%"`, `"-Inf%"`.
-- Extremely large finite percentages may use scientific notation, but they do
-  not render as infinity.
+- Rounded percentage magnitudes from `1e6` use scientific notation:
+  `Percent(10000)` returns `"1e+6%"`. Finite inputs do not render as infinity.
 
 ## Non-Goals
 

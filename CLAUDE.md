@@ -34,6 +34,7 @@ import (
 )
 
 humanize.Bytes(1500)                          // "1.5 kB"
+humanize.Bytes(1250)                          // "1.3 kB"
 humanize.BinaryBytes(1536)                    // "1.5 KiB"
 ref := time.Now()
 twoHoursAgo := ref.Add(-2 * time.Hour)
@@ -41,6 +42,7 @@ humanize.Relative(twoHoursAgo, ref)           // "2 hours ago"
 humanize.Number(1234567)                      // "1,234,567"
 humanize.Ordinal(3)                           // "3rd"
 humanize.Percent(0.333)                       // "33.3%"
+humanize.Percent(10000)                       // "1e+6%"
 humanize.Count(1000, "item", "items")         // "1,000 items"
 ```
 
@@ -137,6 +139,12 @@ Formatting functions never return errors:
 - **Stateless formatting** — no package-level mutable state, no constructors, no interfaces
 - **Graceful edge cases** — format functions never panic or return errors
 - **At most one decimal place** — `"1.5 kB"` when needed, `"1 kB"` when not
+- **Byte rounding** — scaled magnitudes below 10 use one decimal, magnitudes
+  from 10 use whole numbers; ties round away from zero, and a rounded value
+  reaching the base promotes its unit when possible
+- **Percent notation** — `Percent` takes a fraction; rounded percentage
+  magnitudes from `1e6` use scientific notation with at most one mantissa
+  decimal, keeping finite input finite
 - **Function naming** — name describes the intent (`Number` formats integers for a reader), no `Format` prefix, no `To` prefix
 - **Variants are separate functions** — `Bytes` vs `BinaryBytes`, not `Bytes(n, WithBinary())`
 - **Single relative-time API** — `Relative` is the only relative-time entry point; reference time is required

@@ -8,6 +8,7 @@ import (
 // Percent formats fraction as a percentage with at most one decimal place.
 // The input is a fraction, so 0.333 renders as "33.3%" and 1 renders as
 // "100%". Values above 1 are not clamped: 1.25 renders as "125%".
+// Rounded percentages of magnitude 1e6 or more use scientific notation.
 // NaN and infinities render as "NaN%", "+Inf%", and "-Inf%".
 func Percent(fraction float64) string {
 	switch {
@@ -19,11 +20,14 @@ func Percent(fraction float64) string {
 		return "-Inf%"
 	}
 
-	if math.Abs(fraction) > math.MaxFloat64/1000 {
+	if math.Abs(fraction) >= 10000 {
 		return largePercent(fraction)
 	}
 
 	pct := math.Round(fraction*1000) / 10
+	if math.Abs(pct) >= 1e6 {
+		return largePercent(fraction)
+	}
 	if pct == 0 {
 		return "0%"
 	}

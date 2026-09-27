@@ -44,6 +44,23 @@ func TestPercent(t *testing.T) {
 
 		// Large values
 		{"very large", 9999.999, "999999.9%"},
+		{"below rounded scientific boundary", 9999.9994, "999999.9%"},
+		{"rounds into scientific boundary", 9999.9996, "1e+6%"},
+		{"float before scientific boundary", math.Nextafter(10000, 0), "1e+6%"},
+		{"scientific boundary", 10000, "1e+6%"},
+		{"float after scientific boundary", math.Nextafter(10000, math.Inf(1)), "1e+6%"},
+		{"below mantissa carry", 99499, "9.9e+6%"},
+		{"above mantissa carry", 99501, "1e+7%"},
+		{"mantissa carry", 99999, "1e+7%"},
+		{"negative large fixed", -9999.999, "-999999.9%"},
+		{"negative below rounded scientific boundary", -9999.9994, "-999999.9%"},
+		{"negative rounds into scientific boundary", -9999.9996, "-1e+6%"},
+		{"negative float before scientific boundary", -math.Nextafter(10000, 0), "-1e+6%"},
+		{"negative scientific boundary", -10000, "-1e+6%"},
+		{"negative float after scientific boundary", -math.Nextafter(10000, math.Inf(1)), "-1e+6%"},
+		{"negative below mantissa carry", -99499, "-9.9e+6%"},
+		{"negative above mantissa carry", -99501, "-1e+7%"},
+		{"negative mantissa carry", -99999, "-1e+7%"},
 		{"max finite stays finite", math.MaxFloat64, "1.8e+310%"},
 		{"negative max finite stays finite", -math.MaxFloat64, "-1.8e+310%"},
 
@@ -71,16 +88,28 @@ func TestPercent(t *testing.T) {
 func TestPercentFiniteLargeBoundary(t *testing.T) {
 	t.Parallel()
 
-	tests := []float64{
-		math.MaxFloat64 / 1000,
-		math.Nextafter(math.MaxFloat64/1000, math.Inf(1)),
+	boundary := math.MaxFloat64 / 1000
+	tests := []struct {
+		name string
+		in   float64
+		want string
+	}{
+		{"before overflow boundary", math.Nextafter(boundary, 0), "1.8e+307%"},
+		{"overflow boundary", boundary, "1.8e+307%"},
+		{"after overflow boundary", math.Nextafter(boundary, math.Inf(1)), "1.8e+307%"},
+		{"negative before overflow boundary", -math.Nextafter(boundary, 0), "-1.8e+307%"},
+		{"negative overflow boundary", -boundary, "-1.8e+307%"},
+		{"negative after overflow boundary", -math.Nextafter(boundary, math.Inf(1)), "-1.8e+307%"},
 	}
 
-	for _, in := range tests {
-		got := Percent(in)
-		if got == "+Inf%" || got == "-Inf%" {
-			t.Errorf("Percent(%g) = %q, want finite output", in, got)
-		}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := Percent(tt.in); got != tt.want {
+				t.Errorf("Percent(%g) = %q, want %q", tt.in, got, tt.want)
+			}
+		})
 	}
 }
 

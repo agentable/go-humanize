@@ -23,12 +23,24 @@ func TestBytes(t *testing.T) {
 		{"1.5 kB", 1500, "1.5 kB"},
 		{"10 kB", 10000, "10 kB"},
 		{"999 kB", 999000, "999 kB"},
+		{"below half tenth", 1249, "1.2 kB"},
+		{"half tenth", 1250, "1.3 kB"},
+		{"above half tenth", 1251, "1.3 kB"},
+		{"below second half tenth", 2249, "2.2 kB"},
+		{"second half tenth", 2250, "2.3 kB"},
+		{"above second half tenth", 2251, "2.3 kB"},
+		{"below whole tie", 10499, "10 kB"},
+		{"whole tie", 10500, "11 kB"},
+		{"above whole tie", 10501, "11 kB"},
 
 		// Values that round to an integer at one decimal place must drop
 		// the trailing zero.
 		{"1024 rounds to 1 kB", 1024, "1 kB"},
 		{"1049 rounds to 1 kB", 1049, "1 kB"},
 		{"999.5 kB promotes to 1 MB", 999500, "1 MB"},
+		{"below MB promotion", 999499, "999 kB"},
+		{"below GB promotion", 999499000, "999 MB"},
+		{"GB promotion", 999500000, "1 GB"},
 
 		// MB range
 		{"1 MB", 1000000, "1 MB"},
@@ -57,6 +69,19 @@ func TestBytes(t *testing.T) {
 		{"-1 kB", -1000, "-1 kB"},
 		{"-1.5 MB", -1500000, "-1.5 MB"},
 		{"-5.5 GB", int64(-5.5 * float64(gigabyte)), "-5.5 GB"},
+		{"negative below half tenth", -1249, "-1.2 kB"},
+		{"negative half tenth", -1250, "-1.3 kB"},
+		{"negative above half tenth", -1251, "-1.3 kB"},
+		{"negative below second half tenth", -2249, "-2.2 kB"},
+		{"negative second half tenth", -2250, "-2.3 kB"},
+		{"negative above second half tenth", -2251, "-2.3 kB"},
+		{"negative below whole tie", -10499, "-10 kB"},
+		{"negative whole tie", -10500, "-11 kB"},
+		{"negative above whole tie", -10501, "-11 kB"},
+		{"negative below MB promotion", -999499, "-999 kB"},
+		{"negative MB promotion", -999500, "-1 MB"},
+		{"negative below GB promotion", -999499000, "-999 MB"},
+		{"negative GB promotion", -999500000, "-1 GB"},
 
 		// Edge cases
 		{"math.MaxInt64", math.MaxInt64, "9.2 EB"},
@@ -93,11 +118,17 @@ func TestBinaryBytes(t *testing.T) {
 		{"1.5 KiB", 1536, "1.5 KiB"},
 		{"10 KiB", 10240, "10 KiB"},
 		{"1023 KiB", 1024*1024 - 1024, "1023 KiB"},
+		{"below half tenth", 1279, "1.2 KiB"},
+		{"half tenth", 1280, "1.3 KiB"},
+		{"above half tenth", 1281, "1.3 KiB"},
 
 		// Round-trip: values that round to an integer at one decimal
 		// place must drop the trailing zero.
 		{"1075 rounds to 1 KiB", 1075, "1 KiB"},
 		{"1023.5 KiB promotes to 1 MiB", 1024*1024 - 512, "1 MiB"},
+		{"below MiB promotion", 1048063, "1023 KiB"},
+		{"below GiB promotion", 1073217535, "1023 MiB"},
+		{"GiB promotion", 1073217536, "1 GiB"},
 
 		// MiB range
 		{"1 MiB", 1024 * 1024, "1 MiB"},
@@ -126,6 +157,13 @@ func TestBinaryBytes(t *testing.T) {
 		{"-1 KiB", -1024, "-1 KiB"},
 		{"-1.5 MiB", -1572864, "-1.5 MiB"},
 		{"-5.5 GiB", int64(-5.5 * float64(gibibyte)), "-5.5 GiB"},
+		{"negative below half tenth", -1279, "-1.2 KiB"},
+		{"negative half tenth", -1280, "-1.3 KiB"},
+		{"negative above half tenth", -1281, "-1.3 KiB"},
+		{"negative below MiB promotion", -1048063, "-1023 KiB"},
+		{"negative MiB promotion", -1048064, "-1 MiB"},
+		{"negative below GiB promotion", -1073217535, "-1023 MiB"},
+		{"negative GiB promotion", -1073217536, "-1 GiB"},
 
 		// Edge cases
 		{"math.MaxInt64", math.MaxInt64, "8 EiB"},

@@ -45,7 +45,9 @@ relative time, numbers, ordinals, percentages, and count phrases.
 
 ## API Admission
 
-- New exported symbols must be added to `SPECS/20-api-specs.md` first
+- Justify a new export with a concrete caller need and public behavior tests;
+  keep the accepted API decision and implementation in sync in
+  `SPECS/20-api-specs.md`
 - Public API must remain explainable in one README API section
 - Rejected expansions are recorded in `SPECS/30-design-decisions.md`
 
