@@ -71,6 +71,8 @@ func TestPercent(t *testing.T) {
 
 		// Negative zero
 		{"negative zero", math.Copysign(0, -1), "0%"},
+		{"smallest positive", math.SmallestNonzeroFloat64, "0%"},
+		{"smallest negative", -math.SmallestNonzeroFloat64, "0%"},
 	}
 
 	for _, tt := range tests {
@@ -80,6 +82,52 @@ func TestPercent(t *testing.T) {
 			got := Percent(tt.in)
 			if got != tt.want {
 				t.Errorf("Percent(%f) = %q, want %q", tt.in, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestPercentDecimalBoundaries(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name   string
+		half   float64
+		before string
+		at     string
+	}{
+		{"zero rounding", 0.0005, "0%", "0.1%"},
+		{"small decimal", 0.0045, "0.4%", "0.5%"},
+		{"ordinary decimal", 0.5005, "50%", "50.1%"},
+		{"scientific cutover", 9999.9995, "999999.9%", "1e+6%"},
+		{"low exponent half", 12500, "1.2e+6%", "1.3e+6%"},
+		{"low exponent carry", 99500, "9.9e+6%", "1e+7%"},
+		{"middle exponent half", 1.25e100, "1.2e+102%", "1.3e+102%"},
+		{"middle exponent carry", 9.95e100, "9.9e+102%", "1e+103%"},
+		{"high exponent half", 1.25e307, "1.2e+309%", "1.3e+309%"},
+		{"high exponent carry", 9.95e307, "9.9e+309%", "1e+310%"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			for _, point := range []struct {
+				in   float64
+				want string
+			}{
+				{math.Nextafter(tt.half, 0), tt.before},
+				{tt.half, tt.at},
+				{math.Nextafter(tt.half, math.Inf(1)), tt.at},
+			} {
+				for _, sign := range []float64{1, -1} {
+					in, want := sign*point.in, point.want
+					if sign < 0 && want != "0%" {
+						want = "-" + want
+					}
+					if got := Percent(in); got != want {
+						t.Errorf("Percent(%.17g) = %q, want %q", in, got, want)
+					}
+				}
 			}
 		})
 	}

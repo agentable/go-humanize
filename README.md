@@ -68,6 +68,8 @@ func main() {
   numbers. Ties round away from zero, trailing `.0` is omitted, and rounding
   into the next unit promotes the suffix: `Bytes(1250)` is `"1.3 kB"` and
   `Bytes(999500)` is `"1 MB"`.
+- Rounding uses the exact integer magnitude throughout the `int64` range:
+  `Bytes(1249999999999999999)` is `"1.2 EB"`, one byte below the half-point.
 
 ### Duration
 
@@ -98,6 +100,8 @@ func main() {
 
 - `Percent` takes a fraction: `Percent(0.333)` → `"33.3%"`,
   `Percent(1)` → `"100%"`. Values above `1` are not clamped.
+- It rounds the shortest round-trip decimal input with ties away from zero:
+  `Percent(0.5005)` → `"50.1%"`.
 - `NaN` and infinities render as `"NaN%"`, `"+Inf%"`, `"-Inf%"`.
 - Rounded percentage magnitudes from `1e6` use scientific notation:
   `Percent(10000)` returns `"1e+6%"`. Finite inputs do not render as infinity.
@@ -138,6 +142,21 @@ task verify        # Full verification: deps, fmt, vet, lint, test, vuln
 task deps          # Download and tidy dependencies
 task clean         # Clean build artifacts and caches
 ```
+
+## Release
+
+After `task verify` passes, commit the release changes on `main`:
+
+```bash
+bash scripts/check_changes.sh     # 0: release needed; 1: no relevant committed changes
+bash scripts/tag_release.sh X.Y.Z # Create vX.Y.Z and atomically push main + this tag
+```
+
+Change detection compares the latest local `v*` tag with `HEAD`, including
+the complete `go.mod` and `go.sum`. The release script binds the tag to the
+captured `main` commit and pushes only that commit and tag. A rejected push
+leaves the local tag intact; resolve the rejection before retrying the same
+atomic push. See [the release contract](./SPECS/20-api-specs.md#release-scripts).
 
 ## License
 

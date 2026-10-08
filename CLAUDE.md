@@ -88,9 +88,14 @@ task clean         # Clean build artifacts and caches
 ## Release
 
 ```bash
-bash scripts/check_changes.sh   # Exit 0 when a release tag is needed
-bash scripts/tag_release.sh X.Y.Z  # Create vX.Y.Z and push main + tags
+bash scripts/check_changes.sh   # Compare tag..HEAD; exit 0 when a release is needed, 1 otherwise
+bash scripts/tag_release.sh X.Y.Z  # From main, atomically push main + only vX.Y.Z
 ```
+
+Run `task verify` before publishing. The scripts' comparison scope, commit
+identity, and failure semantics are recorded in `SPECS/20-api-specs.md`.
+After a rejected push, preserve the local tag and resolve the rejection before
+retrying the same atomic push; never force-push or silently fall back to two pushes.
 
 ## Package Shape
 
@@ -141,10 +146,12 @@ Formatting functions never return errors:
 - **At most one decimal place** — `"1.5 kB"` when needed, `"1 kB"` when not
 - **Byte rounding** — scaled magnitudes below 10 use one decimal, magnitudes
   from 10 use whole numbers; ties round away from zero, and a rounded value
-  reaching the base promotes its unit when possible
+  reaching the base promotes its unit when possible. Use exact integer
+  magnitudes across the full `int64` range; do not convert to float for rounding
 - **Percent notation** — `Percent` takes a fraction; rounded percentage
   magnitudes from `1e6` use scientific notation with at most one mantissa
-  decimal, keeping finite input finite
+  decimal, keeping finite input finite. Round the shortest round-trip decimal
+  input directly; do not scale a float or round an already rounded result
 - **Function naming** — name describes the intent (`Number` formats integers for a reader), no `Format` prefix, no `To` prefix
 - **Variants are separate functions** — `Bytes` vs `BinaryBytes`, not `Bytes(n, WithBinary())`
 - **Single relative-time API** — `Relative` is the only relative-time entry point; reference time is required
@@ -181,6 +188,9 @@ the defect; do not replace the dependency with a local imitation.
 - **Coverage:** all edge cases (zero, negative, `math.MaxInt64`, `math.MinInt64`, `math.NaN()`, `math.Inf(±1)`)
 - **Examples:** every public function has at least one `Example*` function for godoc
 - **No test helpers that hide assertions** — use `t.Errorf` directly, keep test logic visible
+- **Release regression tests:** run the actual scripts in temporary Git
+  repositories with local bare remotes, as in `release_test.go`; never use
+  the real origin for test assertions. These tests run through `task test`.
 
 ## Agent Skills
 

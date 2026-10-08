@@ -4,6 +4,48 @@ This file records stable product decisions that are likely to be requested
 again. `SPECS/20-api-specs.md` records the current behavior contract; this file
 explains why common expansions stay out of scope.
 
+## Accepted: Exact Byte Boundaries
+
+Byte digits and unit promotion derive from the exact integer magnitude,
+including `math.MinInt64`. Converting large integers to float before rounding
+loses the one-byte distinction around half-points: a value one byte below
+`1.25 EB` must still render as `1.2 EB`. Reject epsilon corrections and
+compatibility branches; integer quotient and remainder express the boundary
+directly.
+
+Evidence: `bytes.go` and `TestByteRoundingBoundaries` in `bytes_test.go`.
+Comparison paths: `.references/go-humanize/bytes.go` and
+`.references/humanize/src/humanize/filesize.py` illustrate floating display
+and repeated-rounding risks; their algorithms are not local contracts.
+
+## Accepted: Decimal Percent Display Input
+
+`Percent` interprets the float's shortest round-trip decimal representation
+as its display input, then rounds ties away from zero. This matches ordinary
+decimal intent: `Percent(0.5005)` is `50.1%`, while the preceding float is
+`50%`. Fixed and scientific formats use the same interpretation. Scientific
+mantissas round directly from the original digits, avoiding a second rounding
+of the fixed-format result.
+
+Reject exact binary64 fractions as the display interpretation, mixed rules by
+magnitude, epsilon adjustments, and selectable rounding modes. The shortest
+decimal conversion has a measured runtime and allocation cost; accept that
+local cost rather than introduce an approximate fast path with different
+boundary behavior.
+
+Evidence: `percent.go` and `TestPercentDecimalBoundaries` in `percent_test.go`.
+`.references/humanize/src/humanize/number.py` demonstrates exponent/mantissa
+representation; it does not supply this package's input interpretation.
+
+## Rejected: Generic Unit Engine
+
+Bytes round exact integers, Percent rounds a decimal display input, Duration
+truncates to two descending units, and Relative counts complete approximate
+units. These are different rules. Share the two byte variants' mechanism in
+`bytes.go`; keep the other domains in `percent.go`, `duration.go`, and
+`relative.go`. A generic engine would hide these decisions behind parameters
+without a consumer needing that abstraction.
+
 ## Rejected: Locale-Aware Formatting
 
 `go-humanize` is English-only. Locale-aware separators, unit names, plural

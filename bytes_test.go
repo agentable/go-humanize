@@ -2,6 +2,7 @@ package humanize
 
 import (
 	"math"
+	"strconv"
 	"testing"
 )
 
@@ -63,6 +64,12 @@ func TestBytes(t *testing.T) {
 
 		// EB range
 		{"1 EB", exabyte, "1 EB"},
+		{"below EB half tenth", 1249999999999999999, "1.2 EB"},
+		{"EB half tenth", 1250000000000000000, "1.3 EB"},
+		{"below EB promotion", 999499999999999999, "999 PB"},
+		{"EB promotion", 999500000000000000, "1 EB"},
+		{"negative below EB half tenth", -1249999999999999999, "-1.2 EB"},
+		{"negative below EB promotion", -999499999999999999, "-999 PB"},
 
 		// Negative values
 		{"-1 byte", -1, "-1 B"},
@@ -151,6 +158,12 @@ func TestBinaryBytes(t *testing.T) {
 
 		// EiB range
 		{"1 EiB", exbibyte, "1 EiB"},
+		{"below EiB half tenth", 1441151880758558719, "1.2 EiB"},
+		{"EiB half tenth", 1441151880758558720, "1.3 EiB"},
+		{"below EiB promotion", 1152358554653425663, "1023 PiB"},
+		{"EiB promotion", 1152358554653425664, "1 EiB"},
+		{"negative below EiB half tenth", -1441151880758558719, "-1.2 EiB"},
+		{"negative below EiB promotion", -1152358554653425663, "-1023 PiB"},
 
 		// Negative values
 		{"-1 byte", -1, "-1 B"},
@@ -177,6 +190,92 @@ func TestBinaryBytes(t *testing.T) {
 			got := BinaryBytes(tt.in)
 			if got != tt.want {
 				t.Errorf("BinaryBytes(%d) = %q, want %q", tt.in, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestByteRoundingBoundaries(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		in   uint64
+		want string
+	}
+
+	variants := []struct {
+		name   string
+		base   uint64
+		units  []string
+		format func(int64) string
+	}{
+		{"decimal", 1000, []string{"kB", "MB", "GB", "TB", "PB", "EB"}, Bytes},
+		{"binary", 1024, []string{"KiB", "MiB", "GiB", "TiB", "PiB", "EiB"}, BinaryBytes},
+	}
+	for _, variant := range variants {
+		t.Run(variant.name, func(t *testing.T) {
+			t.Parallel()
+			size := uint64(1)
+			for i, unit := range variant.units {
+				size *= variant.base
+				// 1.25 units is an exact half tenth in both unit systems.
+				half := size + size/4
+				cases := []testCase{
+					{half - 1, "1.2 " + unit},
+					{half, "1.3 " + unit},
+					{half + 1, "1.3 " + unit},
+				}
+				// Unscaled bytes do not round into the first unit.
+				if i == 0 {
+					cases = append(cases, testCase{size - 1, strconv.FormatUint(variant.base-1, 10) + " B"})
+				}
+				// 1.15 units is between integers for binary units. Check
+				// its two neighboring bytes, as well as exact decimal ties.
+				floorHalf := size + 3*size/20
+				atFloor := "1.1 " + unit
+				if 3*size%20 == 0 {
+					atFloor = "1.2 " + unit
+				}
+				cases = append(cases,
+					testCase{floorHalf - 1, "1.1 " + unit},
+					testCase{floorHalf, atFloor},
+					testCase{floorHalf + 1, "1.2 " + unit},
+				)
+				if size <= math.MaxInt64/11 {
+					wholeHalf := 10*size + size/2
+					carryFloor := 9*size + 19*size/20
+					atCarryFloor := "9.9 " + unit
+					if 19*size%20 == 0 {
+						atCarryFloor = "10 " + unit
+					}
+					cases = append(cases, []testCase{
+						{wholeHalf - 1, "10 " + unit},
+						{wholeHalf, "11 " + unit},
+						{wholeHalf + 1, "11 " + unit},
+						{carryFloor - 1, "9.9 " + unit},
+						{carryFloor, atCarryFloor},
+						{carryFloor + 1, "10 " + unit},
+					}...)
+				}
+				if i+1 < len(variant.units) {
+					promotion := (variant.base-1)*size + size/2
+					cases = append(cases, []testCase{
+						{promotion - 1, strconv.FormatUint(variant.base-1, 10) + " " + unit},
+						{promotion, "1 " + variant.units[i+1]},
+						{promotion + 1, "1 " + variant.units[i+1]},
+					}...)
+				}
+				for _, tt := range cases {
+					for _, sign := range []int64{1, -1} {
+						in, want := sign*int64(tt.in), tt.want
+						if sign < 0 {
+							want = "-" + want
+						}
+						if got := variant.format(in); got != want {
+							t.Errorf("%s(%d) = %q, want %q", variant.name, in, got, want)
+						}
+					}
+				}
 			}
 		})
 	}

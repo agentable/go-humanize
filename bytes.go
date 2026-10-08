@@ -1,9 +1,6 @@
 package humanize
 
-import (
-	"math"
-	"strconv"
-)
+import "strconv"
 
 const (
 	kilobyte = 1000
@@ -26,7 +23,7 @@ const (
 
 type byteScale struct {
 	unit string
-	size int64
+	size uint64
 }
 
 type byteScales [7]byteScale
@@ -56,63 +53,62 @@ func binaryByteScales() byteScales {
 }
 
 // Bytes formats b with decimal byte units such as "1.5 kB" and "2 MB".
-// It preserves the sign and saturates math.MinInt64 to math.MaxInt64 when
-// taking the absolute value.
+// It preserves the sign and rounds the exact integer magnitude, with ties
+// away from zero.
 func Bytes(b int64) string {
 	scales := decimalByteScales()
 	return formatBytes(b, &scales)
 }
 
 // BinaryBytes formats b with IEC binary byte units such as "1.5 KiB" and
-// "2 MiB". It preserves the sign and saturates math.MinInt64 to math.MaxInt64
-// when taking the absolute value.
+// "2 MiB". It preserves the sign and rounds the exact integer magnitude,
+// with ties away from zero.
 func BinaryBytes(b int64) string {
 	scales := binaryByteScales()
 	return formatBytes(b, &scales)
 }
 
 func formatBytes(b int64, scales *byteScales) string {
-	base := scales[1].size
-	neg := b < 0
-	if b == math.MinInt64 {
-		b = math.MaxInt64
-	} else if neg {
-		b = -b
-	}
-
+	var magnitude uint64
 	sign := ""
-	if neg {
+	if b < 0 {
+		// Avoid signed overflow when b is MinInt64.
+		magnitude = uint64(-(b + 1)) + 1 //nolint:gosec // For b < 0, -(b+1) is in [0, MaxInt64].
 		sign = "-"
+	} else {
+		magnitude = uint64(b)
 	}
 
-	if b < base {
-		return sign + strconv.FormatInt(b, 10) + " B"
+	if magnitude < scales[1].size {
+		return sign + strconv.FormatUint(magnitude, 10) + " B"
 	}
 
 	exp := 0
-	value := float64(b)
-	for value >= float64(base) && exp < 6 {
-		value /= float64(base)
+	for exp+1 < len(scales) && magnitude >= scales[exp+1].size {
 		exp++
 	}
 
-	value = roundedByteValue(value)
-	if exp < 6 && value >= float64(base) {
-		value = 1
-		exp++
+	size := scales[exp].size
+	value, remainder := magnitude/size, magnitude%size
+	tenths := value < 10
+	if tenths {
+		// The largest size is 2^60, so remainder*10 fits in uint64.
+		value = value*10 + remainder*10/size
+		remainder = remainder * 10 % size
 	}
-	precision := 1
-	if value == math.Trunc(value) {
-		precision = 0
+	if remainder >= (size+1)/2 {
+		value++
 	}
-	number := strconv.FormatFloat(value, 'f', precision, 64)
 
+	if !tenths && exp+1 < len(scales) && value >= scales[1].size {
+		return sign + "1 " + scales[exp+1].unit
+	}
+	number := strconv.FormatUint(value, 10)
+	if tenths {
+		number = strconv.FormatUint(value/10, 10)
+		if value%10 != 0 {
+			number += "." + strconv.FormatUint(value%10, 10)
+		}
+	}
 	return sign + number + " " + scales[exp].unit
-}
-
-func roundedByteValue(value float64) float64 {
-	if value >= 10 {
-		return math.Round(value)
-	}
-	return math.Round(value*10) / 10
 }

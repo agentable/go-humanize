@@ -81,6 +81,8 @@ stateless shape. A proposed public API must satisfy all of these rules:
 - Output uses at most one decimal place
 - Scaled magnitudes below `10` round to one decimal; magnitudes from `10`
   round to whole numbers, with nearest ties away from zero
+- Unit selection and rounding use the exact integer magnitude across the
+  full `int64` range, including `math.MinInt64`
 - Integers do not show trailing `.0`
 - Rounding into the unit base promotes to the next suffix when available
 - The package does not export byte unit constants
@@ -111,6 +113,12 @@ stateless shape. A proposed public API must satisfy all of these rules:
   scientific notation with at most one mantissa decimal and no trailing `.0`
 - Percent rounding uses nearest ties away from zero; scientific mantissa
   carry advances the exponent, so `Percent(99999)` renders as `"1e+7%"`
+- The shortest round-trip decimal representation of the input defines the
+  display value, so `Percent(0.5005)` renders as `"50.1%"`. Intermediate binary
+  scaling must not move a value across a decimal rounding boundary.
+- The fixed-format rounded magnitude selects scientific notation; its
+  mantissa is rounded directly from the input, never from a previously rounded
+  fixed-format result.
 
 > **Why**: Fraction input matches established percent-formatting convention and
 > separates formatting from the multiply-by-100 conversion.
@@ -219,6 +227,17 @@ stateless shape. A proposed public API must satisfy all of these rules:
 
 ## Acceptance Criteria
 
+- Given an integer byte magnitude on either side of a rounding boundary, when
+  `Bytes` or `BinaryBytes` formats it, then digits and suffix reflect the exact
+  magnitude, including the highest reachable units and negative mirrors.
+  Verification path: `TestBytes`, `TestBinaryBytes`, and
+  `TestByteRoundingBoundaries` in `bytes_test.go`.
+- Given a decimal percent half-point or its adjacent floats, when `Percent`
+  formats it, then fixed and scientific output use the same shortest decimal
+  input and ties-away rule. Ordinary half-points, notation changes, exponent
+  carry, and negative mirrors are verified by `TestPercentDecimalBoundaries`
+  in `percent_test.go`; finite extremes and special values are covered by the
+  other Percent tests in that file.
 - Given a relative difference immediately below or at each unit cutover, when
   `Relative` formats it, then the output uses the largest unit whose complete
   lower bound has been reached. Verification path: table-driven tests in
@@ -235,12 +254,44 @@ stateless shape. A proposed public API must satisfy all of these rules:
   phrase, then the result equals `Number(count)` with no trailing space.
   Verification path: empty-form cases in `TestCount` in `count_test.go`.
 
-The owning implementation paths are `relative.go` and `count.go`. Reference
-evidence for boundary judgment lives in `.references/go-humanize/times.go`,
+The owning implementation paths are `bytes.go`, `percent.go`, `relative.go`,
+and `count.go`. Numeric comparison evidence lives in
+`.references/go-humanize/bytes.go`,
+`.references/humanize/src/humanize/filesize.py`, and
+`.references/humanize/src/humanize/number.py`; these illustrate representation
+and repeated-rounding risks, not this package's rounding oracle. Reference
+evidence for time and count judgment lives in `.references/go-humanize/times.go`,
 `.references/humanize/src/humanize/time.py`,
 `.references/humanize/tests/test_time.py`, and
 `.references/go-humanize/english/words.go`. Reference behavior is evidence,
 not an expansion mandate for this package.
+
+## Release Scripts
+
+- `scripts/check_changes.sh` compares the latest local `v*` tag with `HEAD`
+  over its declared release file set. It compares full `go.mod` and `go.sum`
+  files in the same Git range as source and docs. Uncommitted edits do not
+  affect the result. Exit `0` means a release is needed (including no tag);
+  exit `1` means no relevant committed changes.
+- `scripts/tag_release.sh X.Y.Z` requires `main` before creating any tag,
+  captures its `HEAD`, and creates the annotated `vX.Y.Z` at that commit.
+  Invalid versions and existing local tags are rejected.
+- One atomic push updates remote `main` to the captured commit and publishes
+  only the requested tag, even when `push.followTags` is enabled. A remote
+  rejection or lack of atomic support fails without a partial remote update;
+  there is no force push or non-atomic fallback.
+- A failed push preserves the local tag and prints its commit and a retry
+  instruction. Resolve the rejection, confirm the tag still names the intended
+  release commit, and retry the same two explicit refs with
+  `git push --atomic --no-follow-tags`; rerunning tag creation is not a retry.
+- Verification is a prerequisite owned by the maintainer (`task verify`),
+  rather than a hidden test runner or worktree cleaner in the release script.
+
+Verification paths: `TestCheckChanges`, `TestTagReleaseCommit`, and
+`TestTagReleasePush` in `release_test.go` execute the actual scripts in
+temporary repositories and local bare remotes. They check committed versus
+uncommitted changes, branch/commit identity, unrelated tags, and atomic failure
+scenarios without accessing the real origin.
 
 ## Forbidden
 
