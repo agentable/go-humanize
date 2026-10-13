@@ -133,7 +133,7 @@ admission rules in
 
 ```bash
 task test          # Run all tests with race detection
-task lint          # Run golangci-lint v2.13.1 + go mod tidy check
+task lint          # Run golangci-lint v2.14.0 + go mod tidy check
 task fmt           # Format code
 task vet           # Run go vet
 task bench         # Run benchmark baseline
