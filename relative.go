@@ -62,7 +62,7 @@ func Relative(target, ref time.Time) string {
 		unit = "year"
 	}
 
-	unit = pluralForm(value, unit, unit+"s")
+	unit = countForm(value, unit, unit+"s")
 	valueStr := strconv.FormatInt(value, 10)
 	if future {
 		return "in " + valueStr + " " + unit

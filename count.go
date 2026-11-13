@@ -1,6 +1,6 @@
 package humanize
 
-func pluralForm(count int64, singular, plural string) string {
+func countForm(count int64, singular, plural string) string {
 	if count == 1 || count == -1 {
 		return singular
 	}
@@ -10,7 +10,7 @@ func pluralForm(count int64, singular, plural string) string {
 // Count formats count with Number's comma separators and chooses singular
 // when count is ±1.
 func Count(count int64, singular, plural string) string {
-	form := pluralForm(count, singular, plural)
+	form := countForm(count, singular, plural)
 	if form == "" {
 		return Number(count)
 	}

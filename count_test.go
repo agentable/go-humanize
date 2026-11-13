@@ -57,6 +57,39 @@ func TestCount(t *testing.T) {
 	}
 }
 
+func TestCountForm(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		count    int64
+		singular string
+		plural   string
+		want     string
+	}{
+		{name: "positive singular", count: 1, singular: "person", plural: "people", want: "person"},
+		{name: "negative singular", count: -1, singular: "person", plural: "people", want: "person"},
+		{name: "zero plural", count: 0, singular: "person", plural: "people", want: "people"},
+		{name: "positive plural", count: 2, singular: "person", plural: "people", want: "people"},
+		{name: "negative plural", count: -2, singular: "person", plural: "people", want: "people"},
+		{name: "empty singular", count: 1, singular: "", plural: "people", want: ""},
+		{name: "empty plural", count: 2, singular: "person", plural: "", want: ""},
+		{name: "verbatim singular", count: -1, singular: " one ", plural: " many ", want: " one "},
+		{name: "verbatim plural", count: 0, singular: " one ", plural: " many ", want: " many "},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := countForm(tt.count, tt.singular, tt.plural); got != tt.want {
+				t.Errorf("countForm(%d, %q, %q) = %q, want %q",
+					tt.count, tt.singular, tt.plural, got, tt.want)
+			}
+		})
+	}
+}
+
 func BenchmarkCount(b *testing.B) {
 	for b.Loop() {
 		Count(5, "item", "items")
