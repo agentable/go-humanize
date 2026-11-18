@@ -95,7 +95,7 @@ stateless shape. A proposed public API must satisfy all of these rules:
 
 - `Number(int64)` formats with comma separators every three digits
 - Negative values keep the leading `-`
-- `math.MinInt64` is rendered explicitly because `-MinInt64` overflows
+- `Number(math.MinInt64)` returns `"-9,223,372,036,854,775,808"`
 
 > **Why**: A function name should describe intent ("format a number for a
 > reader") rather than implementation ("add commas").

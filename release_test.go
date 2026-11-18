@@ -120,8 +120,7 @@ func TestCheckChanges(t *testing.T) {
 			output, err := r.run("bash", "scripts/check_changes.sh")
 			code := 0
 			if err != nil {
-				var exit *exec.ExitError
-				if errors.As(err, &exit) {
+				if exit, ok := errors.AsType[*exec.ExitError](err); ok {
 					code = exit.ExitCode()
 				} else {
 					t.Fatal(err)

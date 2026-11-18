@@ -1,7 +1,6 @@
 package humanize
 
 import (
-	"math"
 	"strconv"
 	"time"
 )
@@ -24,13 +23,6 @@ func durationUnits() durationUnitSet {
 	}
 }
 
-func absNegativeDuration(d time.Duration) time.Duration {
-	if d == time.Duration(math.MinInt64) {
-		return time.Duration(math.MaxInt64)
-	}
-	return -d
-}
-
 // Duration formats d with up to two significant units such as "1h 30m" and
 // "2d 5h". It preserves the sign, treats a day as 24 hours, uses ms and µs
 // below a second, and returns "0s" for zero.
@@ -40,13 +32,9 @@ func Duration(d time.Duration) string {
 	}
 
 	neg := d < 0
-	if neg {
-		d = absNegativeDuration(d)
-	}
-
 	result := ""
 	partsCount := 0
-	remaining := d
+	remaining := d.Abs()
 
 	for _, u := range durationUnits() {
 		if remaining < u.size {
