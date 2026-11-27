@@ -93,7 +93,7 @@ stateless shape. A proposed public API must satisfy all of these rules:
 
 ### Number
 
-- `Number(int64)` formats with comma separators every three digits
+- `Number(int64)` groups decimal digits in threes from the right and adds a comma between groups
 - Negative values keep the leading `-`
 - `Number(math.MinInt64)` returns `"-9,223,372,036,854,775,808"`
 
